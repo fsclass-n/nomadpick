@@ -25,7 +25,8 @@ def _test_db_url() -> str | None:
 
 
 TEST_DB_URL = _test_db_url()
-collect_ignore = [] if TEST_DB_URL else ["backend/tests"]
+# testpaths 에 명시된 디렉터리는 collect_ignore 가 적용되지 않으므로 파일 glob 으로 제외
+collect_ignore_glob = [] if TEST_DB_URL else ["backend/tests/*.py"]
 
 os.environ.update({
     "DATABASE_URL": TEST_DB_URL or "",
