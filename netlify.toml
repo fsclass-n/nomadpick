@@ -1,0 +1,17 @@
+# 1단계: 프런트엔드(frontend/) 단독 정적 배포 - https://nomadpick.netlify.app
+# API 는 frontend/js/config.js 에서 Render 백엔드(https://nomadpick.onrender.com/api/v1)로 연결
+[build]
+  publish = "frontend"
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=600"

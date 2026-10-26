@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>선호 설정 | NomadPick</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="container py-4" style="max-width: 860px">
+  <div class="alert alert-primary d-none" id="welcome"><i class="bi bi-emoji-smile me-1"></i>가입을 환영합니다! 여행 취향을 알려주시면 바로 맞춤 추천을 시작합니다.</div>
+  <h1 class="mb-1">선호 설정</h1>
+  <p class="text-secondary mb-4">저장 즉시 맞춤 추천에 반영됩니다.</p>
+
+  <form id="prefForm" class="np-panel p-4">
+    <section class="mb-4">
+      <h2 class="h3 mb-2">여행 지역 <small class="text-secondary fs-6 fw-normal">(복수 선택)</small></h2>
+      <div class="d-flex flex-wrap gap-2" id="regions"></div>
+    </section>
+
+    <section class="mb-4">
+      <h2 class="h3 mb-2">1인 예산</h2>
+      <div class="row g-3 align-items-center">
+        <div class="col-md-6">
+          <label class="form-label small text-secondary mb-1" for="budgetMin">최소 <b id="budgetMinLabel"></b></label>
+          <input type="range" class="form-range" id="budgetMin" min="0" max="5000000" step="100000" value="300000">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-secondary mb-1" for="budgetMax">최대 <b id="budgetMaxLabel"></b></label>
+          <input type="range" class="form-range" id="budgetMax" min="100000" max="5000000" step="100000" value="1500000">
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-4">
+      <h2 class="h3 mb-2">출발 희망월 <small class="text-secondary fs-6 fw-normal">(복수 선택, 선택하지 않으면 전체)</small></h2>
+      <div class="d-flex flex-wrap gap-2" id="months"></div>
+    </section>
+
+    <section class="mb-4">
+      <h2 class="h3 mb-2">여행 기간</h2>
+      <div class="d-flex align-items-center gap-2">
+        <select class="form-select w-auto" id="nightsMin"></select><span>박 ~</span>
+        <select class="form-select w-auto" id="nightsMax"></select><span>박</span>
+      </div>
+    </section>
+
+    <section class="mb-4">
+      <h2 class="h3 mb-2">여행 테마</h2>
+      <div class="d-flex flex-wrap gap-2" id="themes"></div>
+    </section>
+
+    <section class="mb-4">
+      <h2 class="h3 mb-2">동행 유형</h2>
+      <div class="d-flex flex-wrap gap-2" id="companions"></div>
+    </section>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <a href="recommend.html" class="btn btn-light">취소</a>
+      <button class="btn btn-primary px-4" type="submit" id="saveBtn"><i class="bi bi-check2 me-1"></i>저장하고 추천 보기</button>
+    </div>
+  </form>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/preferences.js"></script>
+</body>
+</html>

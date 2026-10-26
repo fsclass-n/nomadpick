@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment (비밀 정보 - 저장소 제외)
+.env
+
+# Local data / outputs
+*.db
+*.sqlite3
+reports/
+logs/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Office temp files
+~$*
+*.tmp
+
+# Netlify
+.netlify/
+node_modules/
+
+# Docs build cache
+docs/tools/out/

@@ -1,0 +1,126 @@
+# NomadPick CI/CD - 변경된 파일에 따라 배포 대상을 나눈다.
+#
+#   변경 경로                                         | Netlify | Render | EC2
+#   frontend/**, netlify.toml                         |   O     |   O    |  O   (Render·EC2 도 프런트엔드를 함께 제공)
+#   backend/**, rpa/**, requirements.txt, Dockerfile  |   -     |   O    |  O
+#   render.yaml                                       |   -     |   O    |  -
+#   docker-compose.yml, deploy/**                     |   -     |   -    |  O
+#   docs/**, README.md 등                              |   -     |   -    |  -
+#
+# GitHub Secrets
+#   NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID : Netlify 배포 (Personal access token, Site ID)
+#   RENDER_DEPLOY_HOOK_URL              : Render > Settings > Deploy Hook
+#   EC2_HOST, EC2_USER, EC2_SSH_KEY     : EC2 접속 (서버의 ~/nomadpick/.env 는 서버에서 직접 관리)
+#   TEST_DATABASE_URL                   : pytest 용 TiDB 테스트 DB (예: .../nomadpick_test, 없으면 API 테스트 생략)
+# GitHub Variables
+#   EC2_ENABLED                         : 'true' 이면 EC2 배포 실행
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      render: ${{ steps.filter.outputs.render }}
+      ec2: ${{ steps.filter.outputs.ec2 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - 'netlify.toml'
+            render:
+              - 'frontend/**'
+              - 'backend/**'
+              - 'rpa/**'
+              - 'requirements.txt'
+              - 'Dockerfile'
+              - 'render.yaml'
+            ec2:
+              - 'frontend/**'
+              - 'backend/**'
+              - 'rpa/**'
+              - 'requirements.txt'
+              - 'Dockerfile'
+              - 'docker-compose.yml'
+              - 'deploy/**'
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.render == 'true' || needs.changes.outputs.ec2 == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest
+
+  deploy-netlify:
+    needs: changes
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Deploy frontend/ to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then echo "::warning::NETLIFY_AUTH_TOKEN / NETLIFY_SITE_ID 미설정 - 건너뜀"; exit 0; fi
+          npx --yes netlify-cli@17.38.1 deploy --prod --dir=frontend --site "$NETLIFY_SITE_ID" --message "${GITHUB_SHA::7} ${{ github.event.head_commit.message }}"
+
+  deploy-render:
+    needs: [changes, test]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.render == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "::warning::RENDER_DEPLOY_HOOK_URL 미설정 - 건너뜀"; exit 0; fi
+          curl -fsS -X POST "$HOOK"
+
+  deploy-ec2:
+    needs: [changes, test]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.ec2 == 'true' && vars.EC2_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2 (docker compose)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/nomadpick
+            git fetch --all && git reset --hard origin/main
+            test -f .env || { echo "~/nomadpick/.env 없음 - 서버에 .env 를 먼저 작성하세요"; exit 1; }
+            docker compose up -d --build
+            docker image prune -f
+            sleep 20
+            docker compose exec -T app python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health').read().decode())" \
+              || { docker compose logs --tail=80 app; exit 1; }

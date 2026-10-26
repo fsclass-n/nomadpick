@@ -1,0 +1,34 @@
+# 4단계: AWS EC2 배포 - https://nomadpick.duckdns.org
+#   cp .env.example .env  (값 입력)  →  docker compose up -d --build
+# Caddy 가 DuckDNS 도메인의 HTTPS 인증서(Let's Encrypt)를 자동 발급·갱신한다.
+services:
+  app:
+    build: .
+    image: nomadpick:latest
+    container_name: nomadpick-app
+    env_file: .env
+    environment:
+      - PORT=8000
+    restart: unless-stopped
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: nomadpick-caddy
+    depends_on:
+      - app
+    environment:
+      - DOMAIN=${DOMAIN:-nomadpick.duckdns.org}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

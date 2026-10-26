@@ -1,0 +1,89 @@
+/* NomadPick - Design guide: Primary #0D6EFD, Accent #FD7E14, Background #F8F9FA, Pretendard 15px/22px */
+:root {
+  --np-primary: #0d6efd;
+  --np-accent: #fd7e14;
+  --np-bg: #f8f9fa;
+  --np-ink: #212529;
+  --np-muted: #6c757d;
+  --np-radius: 14px;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+  font-size: 15px;
+  background: var(--np-bg);
+  color: var(--np-ink);
+  display: flex;
+  flex-direction: column;
+}
+main { flex: 1 0 auto; }
+h1, .h1 { font-size: 26px; font-weight: 700; }
+h2, .h2 { font-size: 22px; font-weight: 700; }
+h3, .h3 { font-size: 18px; font-weight: 700; }
+a { text-decoration: none; }
+
+/* Navbar */
+.np-navbar { background: #fff; box-shadow: 0 1px 0 rgba(0, 0, 0, .06); }
+.np-brand { font-weight: 800; letter-spacing: -.5px; color: var(--np-primary) !important; font-size: 20px; }
+.np-brand .bi { color: var(--np-accent); }
+.np-navbar .nav-link.active { color: var(--np-primary) !important; font-weight: 700; }
+
+/* Hero */
+.np-hero {
+  background: linear-gradient(120deg, #0d6efd 0%, #4dabf7 60%, #74c0fc 100%);
+  color: #fff;
+  border-radius: 0 0 28px 28px;
+}
+.np-hero .lead { opacity: .92; }
+.np-stat { background: rgba(255, 255, 255, .16); border-radius: 12px; padding: .65rem 1rem; min-width: 120px; }
+.np-stat strong { font-size: 20px; display: block; }
+
+/* Filter bar */
+.np-filter { background: #fff; border-radius: var(--np-radius); box-shadow: 0 2px 10px rgba(0, 0, 0, .04); }
+.np-chip { border-radius: 999px !important; }
+
+/* Product card (Flexbox grid) */
+.np-cards { display: flex; flex-wrap: wrap; gap: 1rem; }
+.np-cards > .np-card-wrap { flex: 0 0 calc(25% - .75rem); min-width: 0; }
+@media (max-width: 991.98px) { .np-cards > .np-card-wrap { flex-basis: calc(50% - .5rem); } }
+@media (max-width: 767.98px) { .np-cards > .np-card-wrap { flex-basis: 100%; } }
+
+.np-card { border: 0; border-radius: var(--np-radius); overflow: hidden; height: 100%; transition: transform .15s, box-shadow .15s; box-shadow: 0 2px 10px rgba(0, 0, 0, .05); }
+.np-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(13, 110, 253, .14); }
+.np-thumb { height: 120px; position: relative; color: #fff; display: flex; align-items: flex-end; padding: .8rem 1rem; }
+.np-thumb .np-city { font-size: 22px; font-weight: 800; text-shadow: 0 1px 4px rgba(0, 0, 0, .25); }
+.np-thumb .np-region { font-size: 12px; opacity: .9; }
+.np-thumb .bi-airplane { position: absolute; right: 14px; top: 12px; font-size: 26px; opacity: .35; }
+.np-badge-discount { background: var(--np-accent); color: #fff; font-weight: 700; }
+.np-price { font-size: 20px; font-weight: 800; color: var(--np-ink); }
+.np-price-org { color: var(--np-muted); text-decoration: line-through; font-size: 13px; }
+.np-title { font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em; }
+.np-fav { position: absolute; top: 10px; left: 12px; background: rgba(255, 255, 255, .9); border: 0; border-radius: 50%; width: 34px; height: 34px; color: #e03131; }
+
+.rg-일본 { background: linear-gradient(135deg, #ff6b6b, #f06595); }
+.rg-동남아 { background: linear-gradient(135deg, #20c997, #0ca678); }
+.rg-중화권 { background: linear-gradient(135deg, #ff922b, #e8590c); }
+.rg-대양주 { background: linear-gradient(135deg, #4dabf7, #1c7ed6); }
+.rg-유럽 { background: linear-gradient(135deg, #9775fa, #5f3dc4); }
+.rg-미주 { background: linear-gradient(135deg, #fcc419, #f76707); }
+.rg-국내 { background: linear-gradient(135deg, #22b8cf, #1098ad); }
+
+/* Recommendation */
+.np-rank { width: 44px; height: 44px; border-radius: 50%; background: var(--np-primary); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: 0 0 44px; }
+.np-reason { background: #e7f1ff; color: #0b5ed7; border-radius: 999px; padding: .2rem .65rem; font-size: 13px; display: inline-block; margin: 0 .25rem .25rem 0; }
+.np-score .progress { height: 8px; }
+
+/* Panels */
+.np-panel { background: #fff; border-radius: var(--np-radius); box-shadow: 0 2px 10px rgba(0, 0, 0, .04); }
+.np-kpi { background: #fff; border-radius: var(--np-radius); padding: 1rem 1.2rem; box-shadow: 0 2px 10px rgba(0, 0, 0, .04); height: 100%; }
+.np-kpi .value { font-size: 26px; font-weight: 800; }
+.np-auth { max-width: 420px; }
+.btn-check + .btn { border-radius: 999px; }
+
+/* Misc */
+.np-offline { background: #fff3cd; border-bottom: 1px solid #ffe69c; }
+.np-footer { background: #fff; border-top: 1px solid #eee; color: var(--np-muted); font-size: 13px; }
+.skeleton { background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%); background-size: 400% 100%; animation: sk 1.2s ease infinite; border-radius: var(--np-radius); height: 300px; }
+@keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+.table-np th { background: #f1f3f5; font-weight: 600; white-space: nowrap; }
