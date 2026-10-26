@@ -21,4 +21,4 @@
 - RPA 적재: `RPA_SINK=direct`(DB 직접) / `api`(X-RPA-KEY 로 `/api/v1/rpa/*` 호출)
 - 수집 데이터 `source` 컬럼: `live` / `sample`, 출발 기간 상품은 `depart_date`~`depart_end`
 - 국토교통부 API: `https://apis.data.go.kr/1613000/DmstcFlightNvgInfo/GetFlightOpratInfoList` (2026-03 개편 경로)
-- 배포: `.github/workflows/deploy.yml` 이 변경 경로별로 Netlify / Render / EC2 를 나눠 배포
+- 배포: Netlify·Render 는 GitHub 연동 자동 배포(`netlify.toml` ignore / `render.yaml` buildFilter 로 경로 제한), EC2 는 `.github/workflows/deploy.yml`(테스트 → SSH)

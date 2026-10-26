@@ -1,7 +1,8 @@
 # 3단계: Render 배포 (Blueprint) - https://nomadpick.onrender.com
 # 환경 변수: 대시보드 > Environment > "Add from .env" 에 로컬 .env 내용을 복사하여 붙여넣는다.
-# 배포: backend/ · rpa/ · frontend/ 등 서버 관련 파일이 바뀌어 main 에 push 되면
-#       GitHub Actions(deploy-render.yml)가 테스트 후 Deploy Hook 으로 배포한다. (docs/ 만 바뀌면 배포 안 함)
+# 배포: Render ↔ GitHub 연동으로 main 에 push 되면 자동 배포한다.
+#       buildFilter 에 지정한 서버 관련 파일이 바뀐 경우에만 배포하고, docs/ 등만 바뀌면 건너뛴다.
+#       (Blueprint 가 아닌 대시보드에서 만든 서비스는 Settings > Build & Deploy > Build Filters 에 같은 경로를 입력)
 services:
   - type: web
     name: nomadpick
@@ -10,4 +11,12 @@ services:
     region: singapore
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/v1/health
-    autoDeploy: false
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - frontend/**
+        - backend/**
+        - rpa/**
+        - requirements.txt
+        - Dockerfile
+        - render.yaml

@@ -117,7 +117,7 @@ DELIVERABLES = {
             "Python 3.11 · FastAPI (Render)": "Python 3.11.9 · FastAPI (Render / EC2, Docker)",
             "MySQL 8.x(로컬 개발) / TiDB Cloud(운영)": "TiDB Cloud (로컬 개발·테스트·운영 공통, 테스트 DB nomadpick_test)",
             "Python 3.11.9 · Requests · BeautifulSoup4 · pandas · NumPy (EC2)": "Python 3.11.9 · Playwright · BeautifulSoup4 · pandas · NumPy (APScheduler)",
-            "GitHub Actions · Render 자동 배포": "GitHub Actions(경로별) · Netlify CLI · Render Deploy Hook · EC2 SSH",
+            "GitHub Actions · Render 자동 배포": "Netlify·Render GitHub 연동(경로 필터) · GitHub Actions(테스트·EC2 SSH)",
             "• 공공데이터 서비스 키·DB 정보·JWT 키는 환경 변수와 GitHub Secrets로 관리, 저장소 포함 금지":
                 "• 공공데이터 서비스 키·DB 정보·JWT 키는 .env(로컬·EC2)·Render 환경 변수·GitHub Secrets로 관리, 저장소 포함 금지",
             "Requests · BeautifulSoup4": "Playwright · BeautifulSoup4",
@@ -132,12 +132,12 @@ DELIVERABLES = {
             "Render · AWS EC2": "Netlify · Render · AWS EC2 · Docker",
             "웹·API 호스팅 / RPA 수집 서버": "프런트엔드 / 웹·API·RPA(1차) / 2차 운영(Docker Compose)",
             "Python 3.11, uvicorn app.main:app, main 브랜치 자동 배포":
-                ["Docker(Python 3.11.9 + Chromium), ", "uvicorn backend.app.main:app", ", 환경 변수(.env 내용 붙여넣기), ", "main", " 병합 시 Deploy Hook 배포"],
+                ["Docker(Python 3.11.9 + Chromium), ", "uvicorn backend.app.main:app", ", 환경 변수(.env 내용 붙여넣기), ", "main", " push 시 GitHub 연동 자동 배포(buildFilter)"],
             "t3.small, Ubuntu 22.04, Python 3.11.9 venv, cron 스케줄":
                 "t3.small, Ubuntu 22.04, Docker Compose(FastAPI·RPA 스케줄러 + Caddy HTTPS), nomadpick.duckdns.org",
             "MySQL 8.x": "TiDB Cloud (nomadpick_test)",
             "조원 PC 로컬 설치(동일 스키마)": "로컬 테스트도 TiDB 사용, pytest 가 nomadpick_test 자동 생성 (SQLite 미사용)",
-            "PR: pytest / main 병합: Render 배포 훅, EC2 SSH 배포": ["PR: pytest / ", "main", " 병합: 변경 경로별 Netlify·Render(Deploy Hook)·EC2(SSH) 배포"],
+            "PR: pytest / main 병합: Render 배포 훅, EC2 SSH 배포": ["PR: pytest / ", "main", " push: Netlify·Render GitHub 연동 자동 배포(경로 필터), EC2 는 Actions SSH 배포"],
             "FastAPI 백엔드, static/(HTML·CSS·JS 프런트엔드), 테스트": ["FastAPI 백엔드(backend/), ", "frontend/", "(HTML·CSS·JS 프런트엔드), pytest 테스트"],
             "여행사별 수집기, 정제 모듈, 공공데이터 수집, 리포트 생성, selectors.json":
                 ["여행사별 수집기, 정제 모듈, 국토교통부 API 수집, 리포트 생성, 산출물(docs/), ", "selectors.json"],
@@ -291,7 +291,7 @@ DELIVERABLES = {
                 ["AWS EC2 t3.small, Docker Compose + Caddy HTTPS, APScheduler: 특가 ", "0,30 9-21 * * *", ", 국토교통부 API ", "0 7 * * *", ", 리포트 ", "30 21 * * *"],
             "https://github.com/<3조 Organization>/travelfit-web, travelfit-rpa": "https://github.com/fsclass-n/nomadpick",
             "PR: pytest → main 병합: Render 배포 훅 + EC2 SSH 배포, 배포 이력 성공 7회 / 실패 1회(환경 변수 누락, 조치)":
-                ["PR: pytest → ", "main", " 병합: 변경 경로별 Netlify·Render(Deploy Hook)·EC2(SSH) 배포, 배포 이력 성공 7회 / 실패 1회(서버 .env 누락, 조치)"],
+                ["PR: pytest → ", "main", " push: Netlify·Render GitHub 연동 자동 배포(경로 필터) + EC2 SSH 배포, 배포 이력 성공 7회 / 실패 1회(서버 .env 누락, 조치)"],
             "일정·위험 관리, API 20개, 인증, Render·EC2 배포, CI/CD": "일정·위험 관리, API 20개, 인증, Docker·Render·EC2 배포, CI/CD",
             "화면 8개, Bootstrap 5 반응형, Plotly 차트, 사용자 테스트": "화면 8개, Bootstrap 5 반응형, Plotly 차트, Netlify 배포, 사용자 테스트",
             "여행사 3곳 수집기, 공공데이터 연동, EC2 스케줄링, 수집 모니터링": "여행사 3곳 Playwright 수집기, 국토교통부 API 연동, RPA 스케줄링, 수집 모니터링",

@@ -21,7 +21,7 @@ RPA(Playwright)가 여러 여행사(하나투어 · 모두투어 · 노랑풍선
 | Database | TiDB Cloud (MySQL 8.x 호환, TLS) — 로컬 테스트 포함 모든 환경 |
 | RPA / Data | Playwright, BeautifulSoup4, Requests, pandas, NumPy, scikit-learn, Seaborn, Matplotlib, Plotly, openpyxl |
 | External | 국토교통부_(TAGO)_국내항공운항정보 API (공공데이터포털) |
-| Deploy | Netlify(프런트), Render(Docker), AWS EC2(Docker Compose + Caddy HTTPS), GitHub Actions(경로별 배포) |
+| Deploy | Netlify(프런트, Git 연동), Render(Docker, Git 연동), AWS EC2(Docker Compose + Caddy HTTPS), GitHub Actions(테스트·EC2) |
 
 ## 폴더 구조
 
@@ -89,7 +89,8 @@ uvicorn backend.app.main:app --reload
 
 ## 배포 (경로별 자동 배포)
 
-`main`에 push하면 `.github/workflows/deploy.yml`이 **변경된 파일에 따라** 배포 대상을 고릅니다.
+`main`에 push하면 **변경된 파일에 따라** 배포 대상이 나뉩니다.
+Netlify와 Render는 GitHub 연동으로 자동 배포되고(`netlify.toml`의 `ignore`, `render.yaml`의 `buildFilter`), EC2는 `.github/workflows/deploy.yml`이 테스트 후 SSH로 배포합니다.
 
 | 변경 경로 | Netlify | Render | EC2 |
 |---|---|---|---|
@@ -101,5 +102,5 @@ uvicorn backend.app.main:app --reload
 
 Render·EC2도 프런트엔드를 함께 제공하므로 프런트엔드가 바뀌면 세 곳 모두 배포되고, 백엔드만 바뀌면 Netlify는 배포되지 않습니다.
 
-필요한 GitHub Secrets: `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`, `RENDER_DEPLOY_HOOK_URL`, `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`, `TEST_DATABASE_URL`(선택). Variables에는 `EC2_ENABLED=true`를 설정합니다.
+EC2 배포용 GitHub Secrets는 `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`, `TEST_DATABASE_URL`(선택)이고, Variables에는 `EC2_ENABLED=true`를 설정합니다.
 자세한 절차는 `docs/md/04_배포.md`에 있습니다.

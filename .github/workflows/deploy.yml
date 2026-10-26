@@ -1,4 +1,4 @@
-# NomadPick CI/CD - 변경된 파일에 따라 배포 대상을 나눈다.
+# NomadPick CI/CD - main 에 push 하면 변경된 파일에 따라 배포 대상이 나뉜다.
 #
 #   변경 경로                                         | Netlify | Render | EC2
 #   frontend/**, netlify.toml                         |   O     |   O    |  O   (Render·EC2 도 프런트엔드를 함께 제공)
@@ -7,9 +7,11 @@
 #   docker-compose.yml, deploy/**                     |   -     |   -    |  O
 #   docs/**, README.md 등                              |   -     |   -    |  -
 #
+# - Netlify : GitHub 연동 자동 배포 (netlify.toml 의 ignore 로 frontend 변경 시에만 배포)
+# - Render  : GitHub 연동 자동 배포 (render.yaml buildFilter / 대시보드 Build Filters 로 서버 파일 변경 시에만 배포)
+# - EC2     : 이 워크플로가 테스트 후 SSH 로 docker compose 재배포
+#
 # GitHub Secrets
-#   NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID : Netlify 배포 (Personal access token, Site ID)
-#   RENDER_DEPLOY_HOOK_URL              : Render > Settings > Deploy Hook
 #   EC2_HOST, EC2_USER, EC2_SSH_KEY     : EC2 접속 (서버의 ~/nomadpick/.env 는 서버에서 직접 관리)
 #   TEST_DATABASE_URL                   : pytest 용 TiDB 테스트 DB (예: .../nomadpick_test, 없으면 API 테스트 생략)
 # GitHub Variables
@@ -31,8 +33,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
-      render: ${{ steps.filter.outputs.render }}
+      server: ${{ steps.filter.outputs.server }}
       ec2: ${{ steps.filter.outputs.ec2 }}
     steps:
       - uses: actions/checkout@v4
@@ -40,16 +41,14 @@ jobs:
         id: filter
         with:
           filters: |
-            frontend:
-              - 'frontend/**'
-              - 'netlify.toml'
-            render:
+            server:
               - 'frontend/**'
               - 'backend/**'
               - 'rpa/**'
               - 'requirements.txt'
               - 'Dockerfile'
-              - 'render.yaml'
+              - 'conftest.py'
+              - 'pytest.ini'
             ec2:
               - 'frontend/**'
               - 'backend/**'
@@ -61,7 +60,7 @@ jobs:
 
   test:
     needs: changes
-    if: needs.changes.outputs.render == 'true' || needs.changes.outputs.ec2 == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.server == 'true' || needs.changes.outputs.ec2 == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
@@ -73,35 +72,6 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: pytest
-
-  deploy-netlify:
-    needs: changes
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.frontend == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Deploy frontend/ to Netlify
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: |
-          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then echo "::warning::NETLIFY_AUTH_TOKEN / NETLIFY_SITE_ID 미설정 - 건너뜀"; exit 0; fi
-          npx --yes netlify-cli@17.38.1 deploy --prod --dir=frontend --site "$NETLIFY_SITE_ID" --message "${GITHUB_SHA::7} ${{ github.event.head_commit.message }}"
-
-  deploy-render:
-    needs: [changes, test]
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.render == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Render deploy
-        env:
-          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$HOOK" ]; then echo "::warning::RENDER_DEPLOY_HOOK_URL 미설정 - 건너뜀"; exit 0; fi
-          curl -fsS -X POST "$HOOK"
 
   deploy-ec2:
     needs: [changes, test]

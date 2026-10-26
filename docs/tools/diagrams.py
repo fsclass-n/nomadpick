@@ -34,7 +34,7 @@ GANTT = """gantt
 """
 
 ARCHITECTURE = """flowchart TB
-  GA[GitHub Actions<br/>변경 경로별 배포]
+  GA[GitHub main push<br/>변경 경로별 자동 배포]
   subgraph US[사용자]
     BR[웹 브라우저<br/>HTML5 · Bootstrap 5]
   end
@@ -59,9 +59,9 @@ ARCHITECTURE = """flowchart TB
   EA -. 요청 간격 2초 .-> AG
   RA -.-> MO
   EA -.-> MO
-  GA -- frontend 변경 --> FE
-  GA -- Deploy Hook --> RA
-  GA -- SSH · docker compose --> EA
+  GA -- Git 연동 · frontend 변경 --> FE
+  GA -- Git 연동 · 서버 파일 변경 --> RA
+  GA -- Actions · SSH · docker compose --> EA
 """
 
 SEQUENCE = """sequenceDiagram
