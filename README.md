@@ -45,9 +45,9 @@ nomadpick/
 |---|---|
 | 로컬 | 프로젝트 루트 `.env` (`.env.example` 복사 후 입력) |
 | EC2 | 서버의 `~/nomadpick/.env` |
-| Render | 대시보드 > Environment > **Add from .env** 에 `.env` 내용을 복사하여 붙여넣기 |
+| Render | 대시보드 > Environment > **Add from .env** 에 `.env.example` 의 **[1] 공통 필수** 구역만 붙여넣기 |
 
-`.env`는 Git에 커밋하지 않습니다. `DATABASE_URL`(TiDB)은 필수이며, SQLite는 사용하지 않습니다.
+`.env.example`은 [1] 공통 필수(Render 포함) · [2] 선택(기본값과 같음) · [3] 로컬 전용 · [4] EC2 전용으로 나뉘어 있습니다. `.env`는 Git에 커밋하지 않습니다. `DATABASE_URL`(TiDB)은 필수이며, SQLite는 사용하지 않습니다.
 
 ## 로컬 실행
 

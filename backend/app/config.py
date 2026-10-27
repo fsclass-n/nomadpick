@@ -33,7 +33,6 @@ def _bool(name: str, default: bool = False) -> bool:
 class Settings:
     def __init__(self) -> None:
         self.app_env = os.getenv("APP_ENV", "local")
-        self.app_name = os.getenv("APP_NAME", "NomadPick")
         self.timezone = _TZ
         # TiDB Cloud (MySQL 8.x 호환) - 로컬 테스트 포함 모든 환경에서 TiDB 사용
         self.database_url = os.getenv("DATABASE_URL", "").strip()
