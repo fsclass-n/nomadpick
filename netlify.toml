@@ -1,13 +1,15 @@
 # 1단계: 프런트엔드(frontend/) 단독 정적 배포 - https://nomadpick.netlify.app
 # Netlify ↔ GitHub 연동: main 에 push 되면 Netlify 가 자동 배포한다.
-# 단, frontend/ 또는 netlify.toml 이 바뀐 경우에만 배포하고 백엔드·문서만 바뀌면 건너뛴다(ignore).
+# - base = "frontend" : 빌드를 frontend/ 에서 실행 → 루트 requirements.txt(백엔드·RPA 용 파이썬 패키지)를 설치하지 않음
+# - publish = "."     : base 기준 경로 = frontend/ 를 그대로 배포 (정적 HTML·CSS·JS, 빌드 없음)
+# - ignore            : frontend/ 또는 netlify.toml 이 바뀐 경우에만 배포 (종료 코드 0 = 건너뜀, 1 = 배포)
+#                       ignore 는 base(frontend/)에서 실행되므로 경로는 '.' 과 '../netlify.toml'
 # API 는 frontend/js/config.js 에서 Render 백엔드(https://nomadpick.onrender.com/api/v1)로 연결
 [build]
-  base = ""
-  publish = "frontend"
+  base = "frontend"
+  publish = "."
   command = "echo 'static site - no build'"
-  # 종료 코드 0 = 배포 건너뜀, 1 = 배포. 첫 배포(이전 커밋 정보 없음)는 항상 배포한다.
-  ignore = "[ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- frontend/ netlify.toml"
+  ignore = "[ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../netlify.toml"
 
 [[headers]]
   for = "/*"
