@@ -90,7 +90,7 @@ def get_report(report_date: date, format: str = Query("xlsx", pattern="^(xlsx|ht
 
 @router.post("/rpa/run", status_code=status.HTTP_202_ACCEPTED, summary="RPA 수동 실행")
 def run_rpa(background: BackgroundTasks, job: str = Query("deals", pattern="^(deals|public|report|all)$")):
-    from rpa.run import run_job  # 지연 import (RPA 의존성)
+    from rpa.run import run_job_isolated  # 지연 import (RPA 의존성)
 
-    background.add_task(run_job, job)
+    background.add_task(run_job_isolated, job)
     return {"job": job, "status": "ACCEPTED"}

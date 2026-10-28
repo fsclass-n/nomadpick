@@ -20,10 +20,10 @@ _scheduler: BackgroundScheduler | None = None
 
 
 def _run(job: str) -> None:
-    from rpa.run import run_job
+    from rpa.run import run_job_isolated
 
     try:
-        run_job(job)
+        run_job_isolated(job)  # 별도 프로세스 + 시간·메모리 한도 → 웹 서버(헬스 체크) 보호
     except Exception:  # 스케줄러 스레드가 죽지 않도록 방어
         log.exception("RPA job 실패: %s", job)
 

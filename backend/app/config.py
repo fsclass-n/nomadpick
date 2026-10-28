@@ -57,6 +57,12 @@ class Settings:
         self.playwright_block_media = _bool("PLAYWRIGHT_BLOCK_MEDIA", True)
         # 차단할 리소스 유형 (HTML/JSON 파싱에 불필요 → 메모리·대역폭 절약)
         self.playwright_block_types = {t.strip() for t in os.getenv("PLAYWRIGHT_BLOCK_TYPES", "image,media,font,stylesheet,texttrack,manifest").split(",") if t.strip()}
+        # 웹 서버 보호: RPA 를 별도 저우선순위 프로세스로 실행하고 시간·메모리 한도를 넘으면 강제 종료
+        self.rpa_isolated = _bool("RPA_ISOLATED", True)
+        self.rpa_job_timeout_sec = int(os.getenv("RPA_JOB_TIMEOUT_SEC", "1200"))
+        self.rpa_memory_limit_mb = int(os.getenv("RPA_MEMORY_LIMIT_MB", "0"))   # 0 = 제한 없음 (Linux 에서만 감시)
+        self.rpa_agency_timeout_sec = int(os.getenv("RPA_AGENCY_TIMEOUT_SEC", "480"))
+        self.rpa_retries = int(os.getenv("RPA_RETRIES", "3"))
         self.enable_scheduler = _bool("ENABLE_SCHEDULER", False)
         self.collect_on_startup = _bool("COLLECT_ON_STARTUP", False)
 

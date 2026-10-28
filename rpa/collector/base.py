@@ -100,6 +100,9 @@ class BaseCollector:
         except BrowserError as e:
             result.retries += e.retries
             result.messages.append(f"홈 접속 실패: {e}")
+            if "Timeout" in str(e):  # 홈조차 응답이 없으면(차단·네트워크) 기획전도 실패 → 시간·메모리 낭비 없이 건너뜀
+                result.messages.append("홈 응답 없음 - 해당 여행사 건너뜀")
+                return
             urls = list(self.conf["list_urls"])
         for url in urls:
             if not await browser.allowed(url):

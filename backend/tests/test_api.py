@@ -164,3 +164,15 @@ def test_auto_mode_keeps_live_data_when_live_fails(client):
     assert out["ybtour"]["source"] == "live-kept"
     found = client.get("/api/v1/products", params={"q": "라이브 다낭"}).json()["items"]
     assert found and found[0]["source"] == "live"
+
+
+def test_isolated_rpa_job_is_killed_on_timeout(monkeypatch):
+    """RPA 별도 프로세스가 시간 한도를 넘으면 강제 종료되고 FAIL 로그가 남는다 (웹 서버 보호)."""
+    from backend.app.config import settings
+    from rpa import run as rpa_run
+
+    monkeypatch.setattr(settings, "rpa_isolated", True)
+    monkeypatch.setattr(settings, "rpa_job_timeout_sec", 0)
+    out = rpa_run.run_job_isolated("report")
+    assert "시간 초과" in out["killed"]
+    assert not rpa_run._lock.locked()

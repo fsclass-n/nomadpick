@@ -10,9 +10,14 @@ import argparse
 import asyncio
 import gc
 import logging
+import os
+import signal
+import subprocess
+import sys
 import threading
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from backend.app.config import settings
 from backend.app.constants import CITY_AIRPORT, HOME_AIRPORT_ID
@@ -22,7 +27,6 @@ from .cleaner.normalize import clean
 from .collector.agencies import COLLECTORS
 from .collector.browser import HumanBrowser
 from .public_data import molit_flight
-from .report.daily_report import build_report
 from .sink import domestic_departures, get_sink
 
 log = logging.getLogger("rpa")
@@ -41,8 +45,12 @@ async def _collect_live_async() -> dict | None:
     try:
         for cls in COLLECTORS:
             collector = cls()
-            try:
-                results[collector.agency] = await collector.collect_live(browser)
+            try:  # 여행사 1곳이 응답 없이 멈춰도 전체 작업이 끝나도록 시간 제한
+                results[collector.agency] = await asyncio.wait_for(collector.collect_live(browser), settings.rpa_agency_timeout_sec)
+            except asyncio.TimeoutError:
+                log.error("[%s] live 수집 시간 초과(%ss)", collector.agency, settings.rpa_agency_timeout_sec)
+                from .collector.base import CollectResult
+                results[collector.agency] = CollectResult(agency=collector.agency, messages=[f"live 수집 시간 초과({settings.rpa_agency_timeout_sec}초)"])
             except Exception as e:
                 log.exception("[%s] live 수집 실패", collector.agency)
                 from .collector.base import CollectResult
@@ -151,6 +159,8 @@ def run_report(sink) -> dict:
     """BOT-03: 일일 엑셀 리포트(Seaborn 차트 포함) + Plotly HTML."""
     started = now_kst()
     day = started.date()
+    from .report.daily_report import build_report  # Matplotlib·Seaborn 은 리포트 때만 로드 (수집 프로세스 메모리 절약)
+
     blob, html, summary = build_report(sink.active_products(), day)
     name = f"nomadpick_daily_{day:%Y%m%d}.xlsx"
     sink.report(day, name, blob, html, summary)
@@ -182,6 +192,80 @@ def run_job(job: str = "all", mode: str | None = None, sink_kind: str | None = N
         if job in ("report", "all"):
             out["report"] = run_report(sink)
         return out
+    finally:
+        _lock.release()
+
+
+def _tree_rss_mb(pid: int) -> float:
+    """(Linux) 프로세스와 모든 하위 프로세스(Chromium 포함)의 RSS 합계(MB). 다른 OS 는 0."""
+    proc = Path("/proc")
+    if not proc.is_dir():
+        return 0.0
+    children: dict[int, list[int]] = {}
+    for d in proc.iterdir():
+        if d.name.isdigit():
+            try:
+                ppid = int((d / "stat").read_text().rsplit(")", 1)[1].split()[1])
+                children.setdefault(ppid, []).append(int(d.name))
+            except (OSError, IndexError, ValueError):
+                pass
+    total, stack = 0, [pid]
+    page = os.sysconf("SC_PAGE_SIZE")
+    while stack:
+        p = stack.pop()
+        try:
+            total += int((proc / str(p) / "statm").read_text().split()[1]) * page
+        except (OSError, IndexError, ValueError):
+            pass
+        stack += children.get(p, [])
+    return total / 1024 / 1024
+
+
+def _kill_tree(proc: subprocess.Popen) -> None:
+    if os.name == "posix":
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)  # start_new_session=True → Chromium 까지 같은 프로세스 그룹
+        except ProcessLookupError:
+            pass
+    else:
+        subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
+    proc.wait(timeout=30)
+
+
+def run_job_isolated(job: str = "all") -> dict:
+    """웹 서버 보호용: RPA 를 별도 저우선순위 프로세스로 실행하고, 시간(RPA_JOB_TIMEOUT_SEC)·메모리(RPA_MEMORY_LIMIT_MB)
+    한도를 넘으면 Chromium 까지 강제 종료한다. 스케줄러·관리자 수동 실행이 이 함수를 사용한다."""
+    if not settings.rpa_isolated:
+        return run_job(job)
+    if not _lock.acquire(blocking=False):
+        log.warning("이전 RPA 작업이 실행 중이어서 건너뜁니다: %s", job)
+        return {"skipped": True}
+    started = now_kst()
+    try:
+        kw = {"start_new_session": True, "preexec_fn": lambda: os.nice(10)} if os.name == "posix" else {}
+        proc = subprocess.Popen([sys.executable, "-m", "rpa.run", job], cwd=str(Path(__file__).resolve().parents[1]), **kw)
+        deadline = time.monotonic() + settings.rpa_job_timeout_sec
+        reason, peak = "", 0.0
+        while proc.poll() is None:
+            rss = _tree_rss_mb(proc.pid)
+            peak = max(peak, rss)
+            if settings.rpa_memory_limit_mb and rss > settings.rpa_memory_limit_mb:
+                reason = f"메모리 한도 초과({rss:.0f}MB > {settings.rpa_memory_limit_mb}MB)"
+            elif time.monotonic() > deadline:
+                reason = f"시간 초과({settings.rpa_job_timeout_sec}초)"
+            if reason:
+                _kill_tree(proc)
+                log.error("RPA %s 강제 종료: %s", job, reason)
+                try:
+                    get_sink().log({"job_name": {"deals": "BOT-01", "public": "BOT-02", "report": "BOT-03"}.get(job, "BOT-01"),
+                                    "status": "FAIL", "collected": 0, "failed": 0, "message": f"강제 종료: {reason}",
+                                    "started_at": started, "ended_at": now_kst()})
+                except Exception:
+                    log.exception("강제 종료 로그 기록 실패")
+                return {"killed": reason}
+            time.sleep(2)
+        log.info("RPA %s 종료 code=%s 최대 메모리 %.0fMB", job, proc.returncode, peak)
+        return {"returncode": proc.returncode, "peak_mb": round(peak)}
     finally:
         _lock.release()
 

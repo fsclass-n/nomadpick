@@ -78,8 +78,9 @@ def retry(fn, url: str, attempts: int = 4, sleep=time.sleep):
     raise BrowserError(url, last, retries=attempts - 1)
 
 
-async def aretry(coro_fn, url: str, attempts: int = 4):
-    """(비동기) 최초 1회 + 재시도 3회 (2·4·8초)."""
+async def aretry(coro_fn, url: str, attempts: int | None = None):
+    """(비동기) 최초 1회 + 재시도 RPA_RETRIES 회 (2·4·8초)."""
+    attempts = attempts or settings.rpa_retries + 1
     last = ""
     for attempt in range(attempts):
         try:
