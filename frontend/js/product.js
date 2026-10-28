@@ -21,7 +21,7 @@ function renderDetail(p) {
   document.getElementById("detail").innerHTML = `
   <div class="np-panel overflow-hidden">
     <div class="row g-0">
-      <div class="col-md-4"><div class="np-thumb rg-${NP.esc(p.region)} h-100" style="min-height:200px"><i class="bi bi-airplane"></i>
+      <div class="col-md-4"><div class="${NP.thumbClass(p)} h-100" style="min-height:200px">${NP.thumbImg(p)}<i class="bi bi-airplane"></i>
         <div><div class="np-region">${NP.esc(p.region)} · ${NP.esc(p.country_code || "")}</div><div class="np-city" style="font-size:30px">${NP.esc(p.city || p.region)}</div></div></div></div>
       <div class="col-md-8 p-4">
         <div class="d-flex flex-wrap gap-1 mb-2">

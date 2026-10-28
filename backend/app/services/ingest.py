@@ -29,11 +29,10 @@ def upsert_products(db: Session, agency_code: str, collected_at: datetime, sourc
         raise ValueError(f"알 수 없는 여행사 코드: {agency_code}")
     collected_at = to_kst_naive(collected_at)
     codes = {i["product_code"] for i in items}
-    existing = {
-        (p.product_code, p.depart_date): p
-        for p in db.scalars(select(TravelProduct).where(TravelProduct.agency_id == agency.id,
-                                                        TravelProduct.product_code.in_(codes)))
-    } if codes else {}
+    rows = db.scalars(select(TravelProduct).where(TravelProduct.agency_id == agency.id,
+                                                  TravelProduct.product_code.in_(codes))).all() if codes else []
+    existing = {(p.product_code, p.depart_date): p for p in rows}
+    latest = {p.product_code: p for p in sorted(rows, key=lambda p: p.last_seen_at or datetime.min)}
 
     inserted = updated = 0
     touched: list[TravelProduct] = []
@@ -44,6 +43,10 @@ def upsert_products(db: Session, agency_code: str, collected_at: datetime, sourc
             continue
         seen.add(key)
         product = existing.get(key)
+        if product is None and item.get("depart_anytime") and item["product_code"] in latest:
+            # 상시 출발 상품은 출발일이 수집일로 매일 바뀌므로 같은 상품 행을 이어 쓴다(가격 이력 유지)
+            product = latest.pop(item["product_code"])
+            product.depart_date = item["depart_date"]
         if product is None:
             product = TravelProduct(agency_id=agency.id, product_code=item["product_code"],
                                     depart_date=item["depart_date"], first_seen_at=collected_at)

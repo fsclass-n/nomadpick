@@ -80,6 +80,7 @@ class RpaProductItem(BaseModel):
     theme: str | None = None
     depart_date: date
     depart_end: date | None = None
+    depart_anytime: bool = False  # 출발일 표기 없는 국내 상품(수집일~+60일 상시 출발)
     nights: int | None = None
     days: int | None = None
     price: int = Field(gt=0)

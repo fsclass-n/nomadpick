@@ -119,14 +119,20 @@ NP.seats = (n) => {
   return ` · <span class="${n <= 3 ? "text-danger fw-semibold" : ""}">잔여 ${n}석</span>`;
 };
 
+/** 여행사 상품 이미지(있을 때만). 불러오기 실패 시 이미지를 지워 지역 그라데이션 썸네일로 돌아간다. */
+NP.thumbImg = (p) => (/^https?:\/\//.test(p.image_url || "")
+  ? `<img class="np-thumb-img" src="${NP.esc(p.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer"
+      onerror="this.parentNode.classList.remove('has-img');this.remove()">` : "");
+NP.thumbClass = (p) => `np-thumb rg-${NP.esc(p.region)}${NP.thumbImg(p) ? " has-img" : ""}`;
+
 NP.sourceBadge = (p) => (p.source === "sample" ? `<span class="badge text-bg-light border" title="여행사 실사이트가 동적 렌더링·접근 차단되어 내장 샘플 특가 페이지로 수집된 데이터">샘플</span>` : "");
 
 NP.productCard = (p, { favorite = false } = {}) => `
   <div class="np-card-wrap">
     <div class="card np-card">
       <a href="product.html?id=${p.id}" class="text-reset">
-        <div class="np-thumb rg-${NP.esc(p.region)}">
-          <i class="bi bi-airplane"></i>
+        <div class="${NP.thumbClass(p)}">
+          ${NP.thumbImg(p)}<i class="bi bi-airplane"></i>
           <div><div class="np-region">${NP.esc(p.region)} · ${p.nights ?? "-"}박 ${p.days ?? "-"}일</div><div class="np-city">${NP.esc(p.city || p.region)}</div></div>
         </div>
       </a>

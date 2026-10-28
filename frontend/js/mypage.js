@@ -9,7 +9,7 @@ function favRow(f) {
       : f.price_diff > 0 ? `<span class="badge text-bg-secondary">▲ ${NP.won(f.price_diff)}</span>` : '<span class="badge text-bg-light border">변동 없음</span>';
   return `
   <div class="np-panel p-3 d-flex flex-column flex-md-row gap-3 align-items-md-center">
-    <div class="np-thumb rg-${NP.esc(f.region)} rounded-3" style="height:64px;width:110px;padding:.4rem .7rem"><div class="np-city" style="font-size:16px">${NP.esc(f.city || f.region)}</div></div>
+    <div class="${NP.thumbClass(f)} rounded-3 overflow-hidden flex-shrink-0" style="height:64px;width:110px;padding:.4rem .7rem">${NP.thumbImg(f)}<div class="np-city" style="font-size:16px">${NP.esc(f.city || f.region)}</div></div>
     <div class="flex-grow-1 min-w-0">
       <div class="d-flex flex-wrap gap-1 mb-1"><span class="badge text-bg-primary-subtle text-primary-emphasis">${NP.esc(f.agency)}</span>${badge}${NP.sourceBadge(f)}</div>
       <a class="fw-semibold text-reset" href="product.html?id=${f.id}">${NP.esc(f.title)}</a>

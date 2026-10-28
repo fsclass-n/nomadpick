@@ -49,6 +49,10 @@ def test_classify_city_and_theme():
     assert classify_city("[부산] 세부 5일 제이파크")[0] == "세부"  # 국내 도시는 출발지로 간주
     assert classify_city("(부산출발) 대마도 2일")[:2] == ("대마도", "일본")
     assert classify_city("[오사카] 교토/고베 3일")[0] == "오사카"
+    assert classify_city("[포항]울릉도/독도 3일 #쾌속선") == ("울릉도", "국내", "KR")  # 국내끼리는 [출발지] 라벨 다음 지명
+    assert classify_city("충남/공주 1일 #마곡사")[:2] == ("공주", "국내")
+    assert classify_city("서귀포 신라호텔 3일")[0] == "제주"  # 세부 지명 → 대표 도시
+    assert classify_city("[인천/부산/제주] 싱가포르 5일")[0] == "싱가포르"
     assert classify_theme("치앙마이 골프 54홀") == "골프"
     assert classify_theme("장가계 부모님 효도여행") == "효도"
     assert classify_theme("타이베이 자유여행 에어텔") == "자유여행"
@@ -83,6 +87,7 @@ def test_clean_dedupes_and_counts_failures():
     ("#긴급특가: 10/27 11/3,10", (date(2026, 10, 27), date(2026, 11, 10))),
     ("#긴급특가: 11/12 #가족 3일", (date(2026, 11, 12), None)),
     ("2026-12-01T00:00:00", (date(2026, 12, 1), None)),
+    ("2026.10.30 ~ 2026.11.29", (date(2026, 10, 30), date(2026, 11, 29))),
     ("#긴급특가: 10월~", (None, None)),
 ])
 def test_parse_depart_ranges_and_lists(text, expected):
@@ -97,3 +102,26 @@ def test_parse_duration_multi_option(text, expected):
 
 def test_clean_empty():
     assert clean([], REF)[:2] == ([], 0)
+
+
+def test_undated_domestic_is_anytime_but_overseas_fails():
+    raw = [{"code": "D1", "title": "홍도/흑산도 3일 #유람선", "price": "364,000"},
+           {"code": "O1", "title": "동유럽 3국 7일", "price": "1,999,000"}]
+    items, failed, _ = clean(raw, REF)
+    assert failed == 1 and len(items) == 1
+    it = items[0]
+    assert (it["region"], it["depart_date"], it["depart_end"]) == ("국내", REF, date(2027, 1, 10))  # 수집일 ~ +60일
+    assert it["depart_anytime"] is True
+    dated, _, _ = clean([{"code": "D2", "title": "제주 3일", "depart": "12/01", "price": "300,000"}], REF)
+    assert dated[0]["depart_anytime"] is False
+
+
+@pytest.mark.parametrize("src, page, expected", [
+    ("https://img.x.com/a.jpg", None, "https://img.x.com/a.jpg"),
+    ("//dimgcdn.x.co.kr/a.jpg", "https://pkg.x.co.kr/p", "https://dimgcdn.x.co.kr/a.jpg"),
+    ("/usr/cms/a.jpg", "https://www.hanatour.com/promotion/plan/X", "https://www.hanatour.com/usr/cms/a.jpg"),
+    ("data:image/gif;base64,R0lGOD", "https://x.com", None), ("", "https://x.com", None), (None, None, None),
+])
+def test_image_url(src, page, expected):
+    from rpa.cleaner.normalize import image_url
+    assert image_url(src, page) == expected

@@ -15,7 +15,7 @@ from .browser import BrowserError, HumanBrowser
 
 log = logging.getLogger(__name__)
 SELECTORS = json.loads((Path(__file__).resolve().parents[1] / "selectors.json").read_text(encoding="utf-8"))
-FIELDS = ("code", "title", "link", "depart", "duration", "price", "original_price", "seats", "airline", "origin")
+FIELDS = ("code", "title", "link", "depart", "duration", "price", "original_price", "seats", "airline", "origin", "image")
 
 
 @dataclass
@@ -62,23 +62,33 @@ class BaseCollector:
         return self.exclude(rows)
 
     def exclude(self, rows: list[dict]) -> list[dict]:
-        """패키지 상품이 아닌 항목(예: 왕복 항공권)은 수집 대상에서 제외."""
+        """패키지 상품이 아닌 항목(예: 왕복 항공권)은 수집 대상에서 제외하고, 상품코드 접두어로 도시 힌트를 붙인다."""
         words = self.conf.get("exclude_keywords", [])
-        return [r for r in rows if not any(w in (r.get("title") or "") for w in words)]
+        rows = [r for r in rows if not any(w in (r.get("title") or "") for w in words)]
+        for r in rows:
+            r["city_hint"] = next((c for p, c in self.conf.get("code_city", {}).items() if str(r.get("code") or "").startswith(p)), None)
+        return rows
+
+    def fallback_urls(self) -> list[str]:
+        return [u for rule in self.conf["discover"] for u in rule["fallback"]]
 
     def discover(self, home_html: str) -> list[str]:
-        """홈 화면에서 현재 진행 중인 특가 페이지 주소를 찾는다(기획전 번호가 바뀌어도 대응)."""
-        d = self.conf.get("discover")
-        found: list[str] = []
-        if d:
-            text = home_html.replace("\\u002F", "/").replace("&amp;", "&")
-            for m in re.finditer(d["pattern"], text):
-                url = d.get("base", "") + m.group(1)
+        """홈 화면에서 현재 진행 중인 특가 페이지 주소를 규칙(해외 특가·국내)별로 찾는다(기획전 번호가 바뀌어도 대응).
+
+        규칙마다 찾지 못하면 그 규칙의 fallback 주소를 사용한다.
+        """
+        text = home_html.replace("\\u002F", "/").replace("&amp;", "&")
+        urls: list[str] = []
+        for rule in self.conf["discover"]:
+            found: list[str] = []
+            for m in re.finditer(rule["pattern"], text):
+                url = rule.get("base", "") + m.group(1)
                 if url not in found:
                     found.append(url)
-                if len(found) >= d.get("max", 1):
+                if len(found) >= rule.get("max", 1):
                     break
-        return found or list(self.conf["list_urls"])
+            urls += [u for u in found or rule["fallback"] if u not in urls]
+        return urls
 
     # ---------- 수집 ----------
     async def collect_live(self, browser: HumanBrowser) -> CollectResult:
@@ -103,7 +113,7 @@ class BaseCollector:
             if "Timeout" in str(e):  # 홈조차 응답이 없으면(차단·네트워크) 기획전도 실패 → 시간·메모리 낭비 없이 건너뜀
                 result.messages.append("홈 응답 없음 - 해당 여행사 건너뜀")
                 return
-            urls = list(self.conf["list_urls"])
+            urls = self.fallback_urls()
         for url in urls:
             if not await browser.allowed(url):
                 result.messages.append(f"robots.txt 비허용: {url}")

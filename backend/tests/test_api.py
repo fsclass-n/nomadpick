@@ -138,6 +138,26 @@ def test_rpa_api_requires_key_and_upserts(client):
     assert client.post("/api/v1/rpa/logs", json=log, headers=RPA).status_code == 201
 
 
+def test_anytime_domestic_product_keeps_one_row(client):
+    """출발일 표기 없는 국내 상품(상시 출발)은 출발일이 매일 바뀌어도 같은 상품 행·가격 이력을 이어 쓴다."""
+    today = now_kst()
+    item = {"product_code": "HT-ANY01", "title": "상시 홍도/흑산도 3일", "region": "국내", "city": "홍도", "price": 364000,
+            "image_url": "https://image.hanatour.com/a.jpg", "depart_anytime": True}
+
+    def post(at, price):
+        body = {"agency_code": "hanatour", "collected_at": at.isoformat(), "source": "live", "items": [{
+            **item, "price": price, "depart_date": at.date().isoformat(), "depart_end": (at + timedelta(days=60)).date().isoformat()}]}
+        return client.post("/api/v1/rpa/products/bulk", json=body, headers=RPA).json()
+
+    assert post(today - timedelta(days=1), 364000)["inserted"] == 1
+    r = post(today, 355000)
+    assert (r["inserted"], r["updated"]) == (0, 1)
+    found = client.get("/api/v1/products", params={"q": "상시 홍도"}).json()["items"]
+    assert len(found) == 1 and found[0]["depart_date"] == today.date().isoformat() and found[0]["price"] == 355000
+    assert found[0]["image_url"] == "https://image.hanatour.com/a.jpg"
+    assert len(client.get(f"/api/v1/products/{found[0]['id']}/prices").json()["items"]) == 2
+
+
 def test_admin_endpoints(client):
     assert client.get("/api/v1/admin/rpa-logs", headers=login(client)).status_code == 403
     h = login(client, "admin@test.com", "Admin!2026")

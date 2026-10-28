@@ -53,7 +53,7 @@ class ModetourCollector(BaseCollector):
                             "depart": depart, "depart_end": departures[-1] if len(departures) > 1 else None,
                             "duration": f'{first.get("night")}박{first.get("days")}일' if first.get("days") else None,
                             "origin": "/".join(o.get(f["origin"]) or []), "airline": self._get(o, f["airline"]),
-                            "link": page_url,
+                            "image": o.get(f["image"]), "link": page_url,
                         })
                 for v in o.values():
                     walk(v)
@@ -66,7 +66,7 @@ class ModetourCollector(BaseCollector):
 
 
 class YbtourCollector(BaseCollector):
-    """노랑풍선 긴급특가 기획전 - ul.list_thum > li, 정상가(p.price)·특가(p.sale) 동시 표기."""
+    """노랑풍선 기획전 - 긴급특가 ul.list_thum > li(정상가 p.price·특가 p.sale 동시 표기), 국내 ul.list_prod > li.item."""
     agency = "ybtour"
 
     def postprocess(self, row: dict, item: Tag) -> dict:

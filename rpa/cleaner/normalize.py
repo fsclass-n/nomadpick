@@ -1,14 +1,16 @@
 """pandas 정제·표준화 - 가격/일정/출발일(기간·목록)/잔여석 표기 통일, 지역·테마 분류, 중복 제거."""
 import re
 from datetime import date, timedelta
+from urllib.parse import urljoin
 
 import numpy as np
 import pandas as pd
 
-from ..catalog import CITY_INFO, THEME_KEYWORDS
+from ..catalog import CITY_ALIAS, CITY_INFO, THEME_KEYWORDS
 
-_CITY_KEYS = sorted(CITY_INFO, key=len, reverse=True)
+_CITY_KEYS = sorted({*CITY_INFO, *CITY_ALIAS}, key=len, reverse=True)
 _LABEL_RE = re.compile(r"^\s*\[[^\]]+\]\s*")
+ANYTIME_DAYS = 60  # 출발일 표기가 없는 국내 상품(매일 출발)은 수집일부터 이 기간을 출발 가능 기간으로 본다
 
 
 def parse_price(text: str | None) -> int | None:
@@ -78,15 +80,15 @@ def _infer(mo: int, d: int, ref: date) -> date | None:
 def parse_depart(text: str | None, ref: date) -> tuple[date | None, date | None]:
     """출발일 표기 → (첫 출발일, 마지막 출발일).
 
-    '11.01~12.31 출발'(기간, 하나투어) / '#긴급특가: 11/4, 11'·'10/26,28,11/10'(날짜 목록, 노랑풍선)
+    '11.01~12.31 출발'·'2026.10.30 ~ 2026.11.29'(기간) / '#긴급특가: 11/4, 11'·'10/26,28,11/10'(날짜 목록, 노랑풍선)
     / '2026-11-01T00:00:00'(모두투어 JSON) / '2026.12.05(토)'·'12/12' 단일 날짜.
     """
     if not text:
         return None, None
     t = str(text)
-    if re.search(r"20\d{2}\s*[.\-/년]", t):
-        d = parse_date(t, ref)
-        return d, None
+    if re.search(r"20\d{2}\s*[.\-/년]", t):  # '2026.10.30 ~ 2026.11.29'(기간, 노랑풍선 국내) 포함
+        start, _, end = t.partition("~")
+        return parse_date(start, ref), parse_date(end, ref)
     if m := re.search(r"(\d{1,2})\.(\d{1,2})\s*~\s*(\d{1,2})\.(\d{1,2})", t):
         start, end = _infer(int(m[1]), int(m[2]), ref), _infer(int(m[3]), int(m[4]), ref)
         if start and end and end < start:
@@ -122,14 +124,16 @@ def classify_city(title: str) -> tuple[str | None, str | None, str | None]:
     """상품명에서 가장 먼저 등장하는 도시 → (도시, 지역, 국가코드).
 
     '청주출발'·'부산 출발' 같은 출발지는 제외하고, 국내·해외 도시가 함께 있으면('[부산] 세부 5일')
-    국내 도시는 출발지로 보고 해외 도시를 목적지로 선택한다.
+    국내 도시는 출발지로 보고 해외 도시를 목적지로 선택한다. 세부 지명은 대표 도시로 묶는다('서귀포' → 제주).
     """
     title = _ORIGIN_RE.sub(" ", title)
-    found = [(title.find(k), k) for k in _CITY_KEYS if k in title]
+    found = [(title.find(k), CITY_ALIAS.get(k, k)) for k in _CITY_KEYS if k in title]
     if not found:
         return None, None, None
     overseas = [f for f in found if CITY_INFO[f[1]][0] != "국내"]
-    city = min(overseas or found)[1]
+    label = _LABEL_RE.match(title)  # 국내끼리는 앞쪽 [라벨]이 출발지('[포항]울릉도')인 경우가 많아 본문 지명을 우선
+    body = [f for f in found if f[0] >= label.end()] if label else []
+    city = min(overseas or body or found)[1]
     region, country = CITY_INFO[city]
     return city, region, country
 
@@ -148,6 +152,14 @@ def clean_title(title: str) -> str:
     return head if len(head) >= 4 else t
 
 
+def image_url(src: str | None, page_url: str | None) -> str | None:
+    """상품 이미지 주소 → 절대 URL(http/https 만, data: URI·빈 값 제외)."""
+    if not isinstance(src, str) or not src.strip():
+        return None
+    url = urljoin(page_url or "", "https:" + src.strip() if src.strip().startswith("//") else src.strip())
+    return url[:500] if url.startswith(("http://", "https://")) else None
+
+
 def _none(v):
     return None if v is None or (isinstance(v, float) and np.isnan(v)) or v is pd.NaT else v
 
@@ -157,7 +169,7 @@ def clean(raw: list[dict], ref: date) -> tuple[list[dict], int, pd.DataFrame]:
     if not raw:
         return [], 0, pd.DataFrame()
     df = pd.DataFrame(raw)
-    for col in ("code", "title", "link", "depart", "duration", "price", "original_price", "seats", "airline"):
+    for col in ("code", "title", "link", "depart", "duration", "price", "original_price", "seats", "airline", "image", "city_hint"):
         if col not in df:
             df[col] = None
     df["title"] = df["title"].fillna("").astype(str).str.strip()
@@ -171,9 +183,14 @@ def clean(raw: list[dict], ref: date) -> tuple[list[dict], int, pd.DataFrame]:
     df[["nights", "days"]] = pd.DataFrame(
         [parse_duration(d) if parse_duration(d)[1] else parse_duration(t) for d, t in zip(df["duration"], df["title"])],
         index=df.index)
-    df[["city", "region", "country_code"]] = pd.DataFrame(df["title"].map(classify_city).tolist(), index=df.index)
+    cities = [classify_city(t) for t in df["title"]]  # 상품명에 지명이 없으면 상품코드 기반 도시 힌트 사용
+    cities = [c if c[0] or not isinstance(h, str) else classify_city(h) for c, h in zip(cities, df["city_hint"])]
+    df[["city", "region", "country_code"]] = pd.DataFrame(cities, index=df.index)
     df["theme"] = df["title"].map(classify_theme)
     df["seats_left"] = df["seats"].map(parse_seats)
+    df["depart_anytime"] = df["depart_date"].isna() & (df["region"] == "국내")  # 출발일 표기 없는 국내 상품 → 상시 출발
+    df.loc[df["depart_anytime"], "depart_date"] = ref
+    df.loc[df["depart_anytime"], "depart_end"] = ref + timedelta(days=ANYTIME_DAYS)
 
     valid = df["code"].notna() & (df["title"] != "") & df["price_num"].notna() & df["depart_date"].notna() & df["region"].notna()
     failed = int((~valid).sum())
@@ -193,13 +210,14 @@ def clean(raw: list[dict], ref: date) -> tuple[list[dict], int, pd.DataFrame]:
         "theme": r.theme,
         "depart_date": r.depart_date,
         "depart_end": _none(r.depart_end),
+        "depart_anytime": bool(r.depart_anytime),
         "nights": int(r.nights) if _none(r.nights) is not None else None,
         "days": int(r.days) if _none(r.days) is not None else None,
         "price": int(r.price_num),
         "original_price": int(r.original_num) if _none(r.original_num) is not None else None,
         "seats_left": int(r.seats_left) if _none(r.seats_left) is not None else None,
         "airline": _none(r.airline),
-        "image_url": None,
+        "image_url": image_url(_none(r.image), _none(r.link)),
         "detail_url": _none(r.link),
     } for r in df.itertuples()]
     return items, failed, df
