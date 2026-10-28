@@ -150,3 +150,17 @@ def test_admin_endpoints(client):
     assert xlsx.status_code == 200 and len(xlsx.content) > 10000
     assert "plotly" in client.get(f"/api/v1/admin/reports/{day}", params={"format": "html"}, headers=h).text.lower()
     assert client.get("/api/v1/admin/reports/2000-01-01", headers=h).status_code == 404
+
+
+def test_auto_mode_keeps_live_data_when_live_fails(client):
+    """auto 모드에서 live 수집이 실패하면 기존 live 상품을 sample 로 덮어쓰지 않는다."""
+    from rpa.run import _run_deals
+
+    body = {"agency_code": "ybtour", "collected_at": datetime.now().isoformat(), "source": "live", "items": [{
+        "product_code": "YB-LIVE01", "title": "라이브 다낭 3박5일", "region": "동남아", "city": "다낭",
+        "depart_date": (now_kst() + timedelta(days=20)).date().isoformat(), "nights": 3, "days": 5, "price": 599000}]}
+    assert client.post("/api/v1/rpa/products/bulk", json=body, headers=RPA).status_code == 200
+    out = _run_deals(DirectSink(), "auto", now_kst(), True, None)  # 브라우저 없음 → live 실패
+    assert out["ybtour"]["source"] == "live-kept"
+    found = client.get("/api/v1/products", params={"q": "라이브 다낭"}).json()["items"]
+    assert found and found[0]["source"] == "live"

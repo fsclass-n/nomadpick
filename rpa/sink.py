@@ -54,6 +54,17 @@ class DirectSink:
     def is_empty(self) -> bool:
         return not self.active_products()
 
+    def has_live(self, agency_code: str) -> bool:
+        """해당 여행사의 활성 live 상품이 있는지 (auto 모드에서 sample 로 덮어쓰지 않기 위함)."""
+        from sqlalchemy import func, select
+
+        from backend.app.models import Agency, TravelProduct
+        from backend.app.services.products import active_products_query
+
+        with self.Session() as db:
+            q = active_products_query().join(Agency).where(Agency.code == agency_code, TravelProduct.source == "live")
+            return (db.scalar(select(func.count()).select_from(q.subquery())) or 0) > 0
+
 
 class ApiSink:
     def __init__(self, base_url: str | None = None) -> None:
@@ -92,6 +103,11 @@ class ApiSink:
             if page * 100 >= data["total"]:
                 return items
             page += 1
+
+    def has_live(self, agency_code: str) -> bool:
+        r = self.s.get(f"{self.base}/products", params={"agency": agency_code, "size": 100}, timeout=30)
+        r.raise_for_status()
+        return any(p.get("source") == "live" for p in r.json()["items"])
 
     def is_empty(self) -> bool:
         r = self.s.get(f"{self.base}/meta", timeout=30)

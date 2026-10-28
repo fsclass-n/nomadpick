@@ -62,6 +62,15 @@ def _run_deals(sink, mode: str, at: datetime, write_log: bool, browser) -> dict:
         collector = cls()
         try:
             result = collector.collect(at, mode, browser)
+            if mode == "auto" and result.source == "sample" and sink.has_live(collector.agency):
+                # live 실패 시 이미 적재된 실데이터를 sample 로 덮어쓰지 않는다(기존 live 상품 유지)
+                if write_log:
+                    sink.log({"job_name": "BOT-01", "agency_code": collector.agency, "status": "WARN", "source": "live",
+                              "collected": 0, "failed": 0, "retries": result.retries,
+                              "message": " / ".join(result.messages[:3] + ["live 실패 - 기존 live 데이터 유지(sample 미적재)"]),
+                              "started_at": started, "ended_at": now_kst()})
+                totals[collector.agency] = {"collected": 0, "failed": 0, "source": "live-kept"}
+                continue
             items, failed, _ = clean(result.raw, at.date())
             res = sink.products_bulk(collector.agency, at, result.source, items) if items else {"inserted": 0, "updated": 0}
             fail_rate = failed / (len(items) + failed) * 100 if (items or failed) else 0

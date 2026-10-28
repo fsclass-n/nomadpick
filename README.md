@@ -1,5 +1,10 @@
 # NomadPick (노마드픽)
 
+<p align="center">
+  <a href="docs/video/nomadpick_demo.mp4"><img src="docs/md/images/thumbnail.png" alt="NomadPick 발표·시연 영상" width="760"></a>
+  <br><sub>▶ 썸네일을 누르면 10분 발표·시연 영상(MP4)으로 이동합니다</sub>
+</p>
+
 > RPA 기반 **개인 맞춤형 여행상품 추천** 서비스 — 3조 (김길동(조장), 박미금, 이오리, 홍기흥)
 
 RPA(Playwright)가 여러 여행사(하나투어 · 모두투어 · 노랑풍선)의 특가 정보를 30분마다 수집하고, pandas로 정제하여 TiDB에 적재한 뒤
@@ -11,6 +16,35 @@ RPA(Playwright)가 여러 여행사(하나투어 · 모두투어 · 노랑풍선
 | 최종 도메인 1차 (Render) | https://nomadpick.onrender.com |
 | 최종 도메인 2차 (AWS EC2) | https://nomadpick.duckdns.org |
 | API 문서 (Swagger) | `/docs` |
+
+## 발표·시연 영상
+
+| 항목 | 내용 |
+|---|---|
+| 영상 | [`docs/video/nomadpick_demo.mp4`](docs/video/nomadpick_demo.mp4) (10분, H.264/AAC, 100MB 미만) |
+| 구성 | PPT 발표(3분) → 일반 회원 시연(3분) → 관리자 시연(2분 30초) → 클로징(1분) |
+| 대본·연출 | [docs/md/07_발표영상_대본.md](docs/md/07_발표영상_대본.md) |
+| 압축 도구 | `python docs/tools/compress_video.py 원본.mp4 docs/video/nomadpick_demo.mp4 --target-mb 90` |
+
+### 발표 슬라이드
+
+| | | |
+|---|---|---|
+| <img src="docs/md/images/slides/slide_01.png" width="260"> | <img src="docs/md/images/slides/slide_02.png" width="260"> | <img src="docs/md/images/slides/slide_03.png" width="260"> |
+| <img src="docs/md/images/slides/slide_04.png" width="260"> | <img src="docs/md/images/slides/slide_05.png" width="260"> | <img src="docs/md/images/slides/slide_06.png" width="260"> |
+| <img src="docs/md/images/slides/slide_07.png" width="260"> | <img src="docs/md/images/slides/slide_08.png" width="260"> | <img src="docs/md/images/slides/slide_09.png" width="260"> |
+| <img src="docs/md/images/slides/slide_10.png" width="260"> | <img src="docs/md/images/slides/slide_11.png" width="260"> | <img src="docs/md/images/slides/slide_12.png" width="260"> |
+| <img src="docs/md/images/slides/slide_13.png" width="260"> | <img src="docs/md/images/slides/slide_14.png" width="260"> | <img src="docs/md/images/slides/slide_15.png" width="260"> |
+
+### 시연 화면
+
+| 오늘의 특가 (일반) | 맞춤 추천 Top 10 (회원) |
+|---|---|
+| <img src="docs/md/images/index.png" width="420"> | <img src="docs/md/images/recommend.png" width="420"> |
+| **상품 상세 · 가격 추이 · 국내선 항공편** | **선호 설정 (회원)** |
+| <img src="docs/md/images/product.png" width="420"> | <img src="docs/md/images/preferences.png" width="420"> |
+| **마이페이지 · 관심 상품 (회원)** | **수집 모니터링 (관리자 전용)** |
+| <img src="docs/md/images/mypage.png" width="420"> | <img src="docs/md/images/admin.png" width="420"> |
 
 ## 기술 스택
 
