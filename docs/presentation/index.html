@@ -3,221 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NomadPick 발표 | 3조</title>
+  <title>NomadPick 발표 화면 | 3조</title>
   <link rel="icon" href="../../frontend/img/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <style>
-    :root { --blue:#4dabf7; --orange:#fd7e14; --green:#38d9a9; --muted:#9fb0c8; --panel:rgba(15,23,41,.92); --line:#24365a; }
     * { box-sizing:border-box; }
-    html, body { margin:0; height:100%; overflow:hidden; background:#060a14; color:#eef3fc; font-family:"Pretendard","Malgun Gothic",sans-serif; }
-    body { background:radial-gradient(1200px 700px at 20% 10%, rgba(77,171,247,.12), transparent 60%),
-                        radial-gradient(900px 600px at 85% 90%, rgba(253,126,20,.10), transparent 60%), #060a14; }
-    #stage { position:fixed; inset:0; }
-    #canvas { position:absolute; left:0; top:0; transform-origin:0 0; transition:transform 1.2s cubic-bezier(.65,.05,.25,1); }
-    .step { position:absolute; width:1600px; height:900px; padding:80px 100px; border-radius:36px; transform-origin:center;
-            background:var(--panel); border:2px solid var(--line); box-shadow:0 40px 120px rgba(0,0,0,.55); opacity:.35; transition:opacity .8s; }
-    .step.active { opacity:1; }
-    .step.bare { background:transparent; border:0; box-shadow:none; }
-    .kicker { color:var(--orange); font-weight:800; letter-spacing:3px; font-size:26px; text-transform:uppercase; }
-    h1 { font-size:120px; line-height:1.05; margin:20px 0; letter-spacing:-4px; }
-    h1 em, h2 em { font-style:normal; background:linear-gradient(90deg,var(--blue),var(--green)); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    h2 { font-size:72px; margin:10px 0 30px; letter-spacing:-2px; line-height:1.15; }
-    p, li { font-size:34px; color:var(--muted); line-height:1.5; }
-    ul { margin:0; padding-left:40px; } li { margin:10px 0; } li b { color:#eef3fc; }
-    .big { font-size:150px; font-weight:900; letter-spacing:-5px; line-height:1; }
-    .row { display:flex; gap:40px; } .col { flex:1; }
-    .card { background:#101b31; border:2px solid var(--line); border-radius:26px; padding:36px; }
-    .card h3 { font-size:40px; margin:10px 0; } .card p { font-size:28px; margin:0; }
-    .blue { color:var(--blue); } .orange { color:var(--orange); } .green { color:var(--green); }
-    img.shot { width:100%; border-radius:20px; border:2px solid var(--line); }
-    .chips span { display:inline-block; margin:8px 10px 8px 0; padding:14px 24px; border-radius:999px; background:#13203a; border:2px solid var(--line); font-size:28px; }
-    .flow { display:flex; align-items:center; flex-wrap:wrap; gap:18px; margin-top:40px; }
-    .flow span { padding:22px 28px; border-radius:20px; background:#13203a; border:2px solid var(--line); font-size:30px; font-weight:700; }
-    .flow i { font-style:normal; font-size:40px; color:var(--orange); }
-    .map-title { font-size:260px; font-weight:900; letter-spacing:-10px; text-align:center; margin-top:180px; }
-    .map-title span { color:var(--orange); }
-    #hud { position:fixed; left:0; right:0; bottom:0; display:flex; align-items:center; gap:14px; padding:12px 20px; font-size:14px; color:var(--muted);
-           background:linear-gradient(transparent, rgba(0,0,0,.6)); z-index:5; }
-    #bar { flex:1; height:4px; background:#1b2742; border-radius:4px; overflow:hidden; } #bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--blue),var(--green)); transition:width .6s; }
-    #hud button { background:#13203a; color:#dfe9fb; border:1px solid var(--line); border-radius:8px; padding:6px 12px; cursor:pointer; font:600 13px "Pretendard",sans-serif; }
-    #help { position:fixed; top:14px; right:18px; font-size:13px; color:var(--muted); z-index:5; }
+    html, body { margin:0; height:100%; background:#05080f; color:#e8eefb; font-family:"Pretendard","Malgun Gothic",sans-serif; }
+    body { display:flex; flex-direction:column; }
+    header { display:flex; align-items:center; gap:10px; padding:10px 16px; background:#0b1220; border-bottom:1px solid #1e2a44; flex-wrap:wrap; }
+    header b { font-size:16px; margin-right:auto; } header b span { color:#fd7e14; }
+    header a, header button { padding:7px 13px; border-radius:9px; border:1px solid #24365a; background:#121c30; color:#dfe9fb;
+                              font:600 13px "Pretendard",sans-serif; text-decoration:none; cursor:pointer; }
+    header .primary { background:linear-gradient(90deg,#f76707,#fd7e14); border:0; color:#fff; }
+    #wrap { flex:1; position:relative; }
+    iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; }
+    #tip { position:absolute; left:50%; bottom:18px; transform:translateX(-50%); padding:8px 14px; border-radius:999px; background:rgba(0,0,0,.65);
+           font-size:13px; color:#cfd9ea; pointer-events:none; transition:opacity .6s; }
   </style>
 </head>
 <body>
-  <div id="help">← → / Space 이동 · O 전체 보기 · F 전체 화면 · Home 처음</div>
-  <div id="stage"><div id="canvas">
-
-    <!-- 0. 전체 지도 (overview) -->
-    <div class="step bare" data-x="2600" data-y="1500" data-scale="5.2" data-overview>
-      <div class="map-title">Nomad<span>Pick</span></div>
-    </div>
-
-    <!-- 1. 표지 -->
-    <div class="step" data-x="0" data-y="0">
-      <div class="kicker">Semi-Project · 3조 · 결과 발표</div>
-      <h1>여행사 특가 비교 30분을<br><em>RPA 로봇이 5분으로</em></h1>
-      <p>RPA 기반 개인 맞춤형 여행상품 추천 서비스 <b style="color:#fff">노마드픽(NomadPick)</b></p>
-      <p style="margin-top:60px">김길동(조장) · 박미금 · 이오리 · 홍기흥</p>
-    </div>
-
-    <!-- 2. 문제 -->
-    <div class="step" data-x="1900" data-y="-200" data-rotate="8">
-      <div class="kicker">Problem</div>
-      <h2>여행 준비의 가장 큰 불편은<br><em>"특가 찾기"</em>였습니다</h2>
-      <div class="row">
-        <div class="col card"><div class="big blue">83%</div><h3>30분 이상 비교</h3><p>여러 사이트를 돌며 특가 비교 (설문 30명)</p></div>
-        <div class="col card"><div class="big orange">70%</div><h3>특가를 놓침</h3><p>마감 후에야 알았던 경험</p></div>
-        <div class="col card"><div class="big green">5분</div><h3>목표</h3><p>탐색 시간 30분 → 5분</p></div>
-      </div>
-    </div>
-
-    <!-- 3. 해결 -->
-    <div class="step" data-x="3800" data-y="0" data-rotate="-6">
-      <div class="kicker">Solution</div>
-      <h2>로봇 비서가 모으고,<br><em>취향에 맞게 골라 줍니다</em></h2>
-      <ul>
-        <li><b>30분마다</b> 하나투어 · 모두투어 · 노랑풍선 특가를 자동 수집</li>
-        <li>"129만원", "1,290,000원~" 같은 제각각 표기를 <b>한 기준으로 정리</b></li>
-        <li>지역 · 예산 · 출발월 · 기간 · 테마로 <b>Top 10 추천 + 추천 이유</b></li>
-        <li>예약은 원 여행사로 연결 — 공개 정보만, 규칙(robots.txt)을 지키며 수집</li>
-      </ul>
-    </div>
-
-    <!-- 4. 데모: 오늘의 특가 -->
-    <div class="step" data-x="5600" data-y="900" data-rotate="4">
-      <div class="row" style="align-items:center">
-        <div class="col"><div class="kicker">Feature 1 · 누구나</div><h2>오늘의<br><em>특가</em></h2>
-          <p>3개 여행사 통합 목록<br>필터 · 정렬 · 도시 검색<br>출발 기간까지 한눈에</p></div>
-        <div class="col" style="flex:1.6"><img class="shot" src="../md/images/index.png" alt="오늘의 특가"></div>
-      </div>
-    </div>
-
-    <!-- 5. 데모: 맞춤 추천 -->
-    <div class="step" data-x="5200" data-y="2400" data-rotate="-5">
-      <div class="row" style="align-items:center">
-        <div class="col" style="flex:1.6"><img class="shot" src="../md/images/recommend.png" alt="맞춤 추천"></div>
-        <div class="col"><div class="kicker">Feature 2 · 회원</div><h2>맞춤 추천<br><em>Top 10</em></h2>
-          <p>취향 유사도 × 60<br>+ 할인 · 출발월 · 예산 가점<br>추천 이유 태그 · 엑셀</p></div>
-      </div>
-    </div>
-
-    <!-- 6. 데모: 상품 상세 -->
-    <div class="step" data-x="3400" data-y="3100" data-rotate="3">
-      <div class="row" style="align-items:center">
-        <div class="col"><div class="kicker">Feature 3 · 회원</div><h2>상품<br><em>상세</em></h2>
-          <p>30분마다 쌓인 가격 추이<br>국토교통부 국내선 항공편<br>관심 상품 가격 하락 알림</p></div>
-        <div class="col" style="flex:1.6"><img class="shot" src="../md/images/product.png" alt="상품 상세"></div>
-      </div>
-    </div>
-
-    <!-- 7. 데모: 관리자 -->
-    <div class="step" data-x="1500" data-y="3000" data-rotate="-4">
-      <div class="row" style="align-items:center">
-        <div class="col" style="flex:1.6"><img class="shot" src="../md/images/admin.png" alt="관리자"></div>
-        <div class="col"><div class="kicker">Feature 4 · 관리자</div><h2>로봇 비서<br><em>업무 일지</em></h2>
-          <p>수집 성공률 · 실패율<br>실행 로그 · 즉시 실행<br>일일 엑셀 리포트</p></div>
-      </div>
-    </div>
-
-    <!-- 8. 기술 -->
-    <div class="step" data-x="-200" data-y="2100" data-rotate="6">
-      <div class="kicker">Architecture</div>
-      <h2>식당에 비유하면 — <em>홀 · 주방 · 냉장고</em></h2>
-      <div class="chips">
-        <span>화면(홀) · HTML5 · Bootstrap 5 · Netlify</span><span>서버(주방) · FastAPI · Docker · Render · EC2</span>
-        <span>냉장고 · TiDB Cloud</span><span>로봇 비서 · Playwright · pandas</span><span>추천 · scikit-learn</span><span>공공데이터 · 국토교통부 API</span>
-      </div>
-      <div class="flow"><span>여행사 3곳</span><i>→</i><span>사람처럼 수집</span><i>→</i><span>정제·표준화</span><i>→</i><span>TiDB</span><i>→</i><span>추천</span><i>→</i><span>웹 · 엑셀</span></div>
-    </div>
-
-    <!-- 9. 문제 해결 -->
-    <div class="step" data-x="-300" data-y="900" data-rotate="-3">
-      <div class="kicker">Trouble Shooting</div>
-      <h2>막혔던 순간, <em>이렇게 풀었습니다</em></h2>
-      <div class="row">
-        <div class="col card"><h3 class="orange">봇 차단 · Access Denied</h3><p>실제 Chrome과 같은 조건(언어·시간대·자동화 흔적 제거·스크롤)으로 접속 → 3곳 모두 실시간 수집</p></div>
-        <div class="col card"><h3 class="blue">제각각인 표기</h3><p>가격·일정·출발일 표기를 정규식·pandas로 통일, 테스트 76건으로 검증</p></div>
-        <div class="col card"><h3 class="green">데이터 보호</h3><p>수집 실패 시 기존 실데이터 유지, 운영 DB와 테스트 DB 분리</p></div>
-      </div>
-    </div>
-
-    <!-- 10. 성과 -->
-    <div class="step" data-x="1900" data-y="1500" data-scale="1.15">
-      <div class="kicker">Results</div>
-      <h2>목표 5개, <em>모두 달성</em></h2>
-      <div class="row">
-        <div class="col card"><div class="big green" style="font-size:110px">97.4%</div><p>수집 성공률<br>(목표 95%)</p></div>
-        <div class="col card"><div class="big blue" style="font-size:110px">330+</div><p>회당 수집 상품<br>(3개 여행사)</p></div>
-        <div class="col card"><div class="big orange" style="font-size:110px">0.41s</div><p>목록 응답<br>(목표 1초)</p></div>
-        <div class="col card"><div class="big green" style="font-size:110px">106</div><p>테스트 통과<br>(단위·통합)</p></div>
-      </div>
-    </div>
-
-    <!-- 11. 팀 -->
-    <div class="step" data-x="3700" data-y="1500" data-rotate="-2">
-      <div class="kicker">Team</div>
-      <h2>4명이 3주 만에, <em>기획부터 배포까지</em></h2>
-      <div class="row">
-        <div class="col card"><h3>김길동</h3><p>조장 · PM<br>백엔드 · 배포</p></div>
-        <div class="col card"><h3>박미금</h3><p>DB · 데이터<br>추천</p></div>
-        <div class="col card"><h3>이오리</h3><p>프런트엔드<br>UI/UX</p></div>
-        <div class="col card"><h3>홍기흥</h3><p>RPA<br>데이터 수집</p></div>
-      </div>
-    </div>
-
-    <!-- 12. 향후 계획 + 감사 -->
-    <div class="step" data-x="5600" data-y="3900" data-rotate="5">
-      <div class="kicker">Next</div>
-      <h2>다음 목표 — <em>AI가 말로 설명하는 추천</em></h2>
-      <ul><li>생성형 AI로 추천 이유를 자연어로 설명</li><li>수집기·가격 이력·배포 구성을 Final-Project에 재사용</li></ul>
-      <h1 style="margin-top:70px">감사합니다 <span class="orange" style="font-size:60px">Q&amp;A</span></h1>
-      <p>fsclass-n.github.io/nomadpick · nomadpick.onrender.com</p>
-    </div>
-
-  </div></div>
-
-  <div id="hud"><button id="prev">이전</button><span id="count">1 / 1</span><div id="bar"><i></i></div><button id="ov">전체 보기</button><button id="fs">전체 화면</button><button id="next">다음</button></div>
-
+  <header>
+    <b>Nomad<span>Pick</span> 발표 화면 · 프로젝트_발표자료.pptx</b>
+    <button class="primary" id="fs">전체 화면으로 발표</button>
+    <a href="nomadpick.pptx" download="NomadPick_발표자료.pptx">PPTX 내려받기</a>
+    <a href="../pdf/프로젝트_발표자료.pdf" target="_blank" rel="noopener">PDF</a>
+    <a href="zoom.html" target="_blank" rel="noopener">줌 프레젠테이션</a>
+    <a href="../../">소개 페이지</a>
+  </header>
+  <div id="wrap">
+    <iframe id="deck" title="NomadPick 발표자료" allowfullscreen></iframe>
+    <div id="tip">슬라이드를 클릭하거나 → / Space 키로 진행 · 애니메이션은 자동으로 재생됩니다</div>
+  </div>
   <script>
-    const canvas = document.getElementById("canvas");
-    const steps = [...document.querySelectorAll(".step")];
-    const W = 1600, H = 900;
-    let cur = 0;
-
-    steps.forEach((s) => {
-      const x = +s.dataset.x, y = +s.dataset.y, sc = +(s.dataset.scale || 1), r = +(s.dataset.rotate || 0);
-      s.style.left = (x - W / 2) + "px";
-      s.style.top = (y - H / 2) + "px";
-      s.style.transform = `rotate(${r}deg) scale(${sc})`;
-    });
-
-    function go(i) {
-      cur = Math.max(0, Math.min(steps.length - 1, i));
-      const s = steps[cur], x = +s.dataset.x, y = +s.dataset.y, sc = +(s.dataset.scale || 1), r = +(s.dataset.rotate || 0);
-      const fit = Math.min(innerWidth / (W * sc), innerHeight / (H * sc)) * 0.94;
-      canvas.style.transform = `translate(${innerWidth / 2}px, ${innerHeight / 2}px) scale(${fit}) rotate(${-r}deg) translate(${-x}px, ${-y}px)`;
-      steps.forEach((el, k) => el.classList.toggle("active", k === cur || "overview" in s.dataset));
-      document.getElementById("count").textContent = `${cur + 1} / ${steps.length}`;
-      document.querySelector("#bar i").style.width = (cur / (steps.length - 1) * 100) + "%";
-      history.replaceState(null, "", "#" + cur);
-    }
-
-    const fullscreen = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-    addEventListener("keydown", (e) => {
-      if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(cur + 1); }
-      else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); go(cur - 1); }
-      else if (e.key === "Home") go(0);
-      else if (e.key === "End") go(steps.length - 1);
-      else if (e.key.toLowerCase() === "o") go(0);
-      else if (e.key.toLowerCase() === "f") fullscreen();
-    });
-    document.getElementById("next").onclick = () => go(cur + 1);
-    document.getElementById("prev").onclick = () => go(cur - 1);
-    document.getElementById("ov").onclick = () => go(0);
-    document.getElementById("fs").onclick = fullscreen;
-    steps.forEach((s, k) => s.addEventListener("click", () => { if (k !== cur) go(k); }));
-    addEventListener("resize", () => go(cur));
-    go(+(location.hash.slice(1)) || 0);
+    // PowerPoint Online(Office 웹 뷰어)으로 슬라이드쇼 재생 - 전환·애니메이션 그대로 표시
+    const pptx = new URL("nomadpick.pptx", location.href).href;
+    document.getElementById("deck").src = "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(pptx);
+    document.getElementById("fs").onclick = () => {
+      const el = document.getElementById("wrap");
+      document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen();
+    };
+    setTimeout(() => { document.getElementById("tip").style.opacity = 0; }, 6000);
   </script>
 </body>
 </html>

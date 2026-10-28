@@ -81,13 +81,20 @@ class BaseCollector:
         return found or list(self.conf["list_urls"])
 
     # ---------- 수집 ----------
-    def collect_live(self, result: CollectResult, browser: HumanBrowser) -> None:
+    async def collect_live(self, browser: HumanBrowser) -> CollectResult:
+        """여행사 1곳을 전용 컨텍스트로 수집하고, 끝나면 컨텍스트를 닫아 메모리를 반환한다."""
+        result = CollectResult(agency=self.agency)
+        async with browser.session() as s:
+            await self._collect_live(result, s)
+        return result
+
+    async def _collect_live(self, result: CollectResult, browser) -> None:
         home = self.conf["home"]
-        if not browser.allowed(home):
+        if not await browser.allowed(home):
             result.messages.append(f"robots.txt 비허용/확인 불가: {home}")
             return
         try:
-            home_page = browser.visit(home)
+            home_page = await browser.visit(home)
             result.retries += home_page.retries
             urls = self.discover(home_page.html)
         except BrowserError as e:
@@ -95,11 +102,11 @@ class BaseCollector:
             result.messages.append(f"홈 접속 실패: {e}")
             urls = list(self.conf["list_urls"])
         for url in urls:
-            if not browser.allowed(url):
+            if not await browser.allowed(url):
                 result.messages.append(f"robots.txt 비허용: {url}")
                 continue
             try:
-                page = browser.visit(url, referer=home, wait_selector=self.conf.get("wait_for"))
+                page = await browser.visit(url, referer=home, wait_selector=self.conf.get("wait_for"))
                 result.retries += page.retries
                 rows = self.parse(page.html, page.url)
                 result.raw.extend(rows)
@@ -114,11 +121,12 @@ class BaseCollector:
         result.source = "sample"
         result.raw = sample_site.parse_sample(self.agency, at)
 
-    def collect(self, at: datetime, mode: str | None = None, browser: HumanBrowser | None = None) -> CollectResult:
+    def collect(self, at: datetime, mode: str | None = None, live: CollectResult | None = None) -> CollectResult:
+        """live: run.collect_live_all() 이 미리 수집한 결과 (None 이면 브라우저 시작 실패)."""
         mode = mode or settings.rpa_source_mode
         result = CollectResult(agency=self.agency)
-        if mode in ("live", "auto") and browser is not None:
-            self.collect_live(result, browser)
+        if mode in ("live", "auto") and live is not None:
+            result = live
         elif mode in ("live", "auto"):
             result.messages.append("브라우저 시작 실패")
         if mode == "sample" or (mode == "auto" and not result.raw):

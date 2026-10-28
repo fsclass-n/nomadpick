@@ -60,7 +60,8 @@
     .num.blue { color:var(--blue); } .num.orange { color:var(--orange); } .num.green { color:var(--green); }
     .feature { display:grid; grid-template-columns:1.05fr 1fr; gap:34px; align-items:center; margin-bottom:46px; }
     .feature:nth-child(even) .shot { order:2; }
-    .shot img { width:100%; border-radius:14px; border:1px solid var(--line); box-shadow:0 18px 50px rgba(0,0,0,.45); }
+    .shot img { width:100%; display:block; transition:transform .4s; }
+    .shot img:hover { transform:translateY(-6px) scale(1.02); }
     .tag { display:inline-block; font-size:12px; font-weight:700; color:var(--orange); letter-spacing:1px; text-transform:uppercase; }
     .feature h3 { font-size:24px; margin:8px 0 10px; letter-spacing:-.5px; }
     .feature ul { margin:0; padding-left:18px; color:var(--muted); }
@@ -98,8 +99,8 @@
       <div class="cta">
         <a class="btn primary" href="#video">▶ 10분 시연 영상 보기</a>
         <a class="btn primary" style="background:linear-gradient(90deg,#f76707,#fd7e14)" href="docs/presentation/" target="_blank" rel="noopener">발표 화면 열기</a>
-        <a class="btn" href="https://nomadpick.onrender.com">서비스 바로가기</a>
-        <a class="btn" href="https://github.com/fsclass-n/nomadpick">소스코드</a>
+        <a class="btn" href="https://nomadpick.onrender.com" target="_blank" rel="noopener">서비스 바로가기 ↗</a>
+        <a class="btn" href="https://github.com/fsclass-n/nomadpick" target="_blank" rel="noopener">소스코드 ↗</a>
       </div>
 
       <div id="video">
@@ -133,31 +134,31 @@
   <section id="features">
     <div class="wrap">
       <h2>핵심 기능</h2>
-      <p class="sub">일반 회원과 관리자 기능을 완전히 나누어 설계했습니다.</p>
+      <p class="sub">일반 회원과 관리자 기능을 완전히 나누고, PC·태블릿·모바일 어디서나 같은 경험을 주는 반응형으로 만들었습니다.</p>
 
       <div class="feature">
-        <div class="shot"><img src="docs/md/images/index.png" alt="오늘의 특가"></div>
+        <div class="shot"><img src="docs/md/images/mockup_index.png" alt="오늘의 특가 - PC·모바일 화면" loading="lazy"></div>
         <div><span class="tag">누구나</span><h3>오늘의 특가 - 3개 여행사 통합 목록</h3>
           <ul><li>지역·예산·출발월·여행사·테마 필터, 할인율·가격·출발 임박 정렬, 도시 검색</li>
             <li>출발 기간 상품은 "11.01~12.31 출발"처럼 기간으로 표시</li>
             <li>백엔드 연결이 끊겨도 오프라인 데모 데이터로 화면 유지</li></ul></div>
       </div>
       <div class="feature">
-        <div class="shot"><img src="docs/md/images/recommend.png" alt="맞춤 추천"></div>
+        <div class="shot"><img src="docs/md/images/mockup_recommend.png" alt="맞춤 추천 - PC·모바일 화면" loading="lazy"></div>
         <div><span class="tag">회원</span><h3>맞춤 추천 Top 10 - 추천 이유까지</h3>
           <ul><li>선호 벡터와 상품 피처의 코사인 유사도(scikit-learn) × 60 + 할인율·출발월·예산 가점</li>
             <li>"선호 지역 일치 · 예산 100만 원 이내 · 12월 출발" 처럼 근거를 태그로 제시</li>
             <li>같은 상품·도시 쏠림을 막는 다양성 규칙, 결과 엑셀 다운로드</li></ul></div>
       </div>
       <div class="feature">
-        <div class="shot"><img src="docs/md/images/product.png" alt="상품 상세"></div>
+        <div class="shot"><img src="docs/md/images/mockup_product.png" alt="상품 상세 - PC·모바일 화면" loading="lazy"></div>
         <div><span class="tag">회원</span><h3>상품 상세 - 가격 추이 · 국내선 항공편</h3>
           <ul><li>30분마다 쌓인 가격 스냅샷을 Plotly 차트로 표시</li>
             <li>국내 상품은 국토교통부 공공데이터로 김포 출발 항공편·최저 운임 제공</li>
             <li>관심 상품 등록 → 가격 하락 시 마이페이지 배지, 예약은 원 여행사로 연결</li></ul></div>
       </div>
       <div class="feature">
-        <div class="shot"><img src="docs/md/images/admin.png" alt="관리자 수집 모니터링"></div>
+        <div class="shot"><img src="docs/md/images/mockup_admin.png" alt="관리자 수집 모니터링 - PC·모바일 화면" loading="lazy"></div>
         <div><span class="tag">관리자 전용</span><h3>RPA 수집 모니터링 대시보드</h3>
           <ul><li>오늘 수집 횟수·상품 수·성공률·파싱 실패율, 여행사별 상태와 일자별 차트</li>
             <li>로봇 3종(특가 수집·국토교통부 API·일일 리포트) 실행 로그와 오류 메시지</li>
@@ -229,10 +230,12 @@
         <img src="docs/md/images/slides/slide_09.png" alt="데이터 정제 및 추천" loading="lazy">
         <img src="docs/md/images/slides/slide_10.png" alt="문제 해결" loading="lazy">
         <img src="docs/md/images/slides/slide_11.png" alt="테스트 결과" loading="lazy">
+        <img src="docs/md/images/slides/slide_13.png" alt="반응형 주요 화면" loading="lazy">
         <img src="docs/md/images/slides/slide_14.png" alt="성과 및 향후 계획" loading="lazy">
       </div>
       <div class="cta" style="margin-top:26px">
-        <a class="btn" href="docs/pdf/프로젝트_발표자료.pdf">발표자료 PDF</a>
+        <a class="btn primary" href="docs/presentation/" target="_blank" rel="noopener">발표 화면 열기</a>
+        <a class="btn" href="docs/pdf/프로젝트_발표자료.pdf" target="_blank" rel="noopener">발표자료 PDF</a>
         <a class="btn" href="https://github.com/fsclass-n/nomadpick/tree/main/docs">산출물 문서</a>
         <a class="btn" href="docs/video/nomadpick_demo.mp4" download>영상 내려받기</a>
       </div>

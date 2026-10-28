@@ -8,6 +8,7 @@
 import argparse
 import copy
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -102,8 +103,8 @@ def _replace_picture(slide, pic, png: bytes):
 
 
 def _screens_slide(prs, template_slide, position: int):
-    shots = [("오늘의 특가 (SC-04)", "index.png"), ("맞춤 추천 Top 10 (SC-05)", "recommend.png"),
-             ("상품 상세 · 가격 추이 · 국내선 항공편 (SC-06)", "product.png"), ("관리자 수집 모니터링 (SC-08)", "admin.png")]
+    shots = [("오늘의 특가 (SC-04)", "mockup_index.png"), ("맞춤 추천 Top 10 (SC-05)", "mockup_recommend.png"),
+             ("상품 상세 · 가격 추이 (SC-06)", "mockup_product.png"), ("관리자 수집 모니터링 (SC-08)", "mockup_admin.png")]
     if not all((SCREENS / f).is_file() for _, f in shots):
         print("  [건너뜀] 화면 캡처 없음:", SCREENS)
         return
@@ -113,9 +114,9 @@ def _screens_slide(prs, template_slide, position: int):
             slide.shapes._spTree.append(copy.deepcopy(shp._element))
     for shp in slide.shapes:
         if shp.name == "TextBox 3":
-            shp.text_frame.paragraphs[0].runs[0].text = "주요 화면"
+            shp.text_frame.paragraphs[0].runs[0].text = "반응형 주요 화면"
         elif shp.name == "TextBox 4":
-            shp.text_frame.paragraphs[0].runs[0].text = "로컬 통합 테스트 화면"
+            shp.text_frame.paragraphs[0].runs[0].text = "PC · 모바일 동일 서비스"
         elif shp.name == "TextBox 7":
             shp.text_frame.paragraphs[0].runs[0].text = str(position + 1)
 
@@ -126,14 +127,13 @@ def _screens_slide(prs, template_slide, position: int):
     for i, (caption, file) in enumerate(shots):
         x = x0 + (i % 2) * (cell_w + gap)
         y = y0 + (i // 2) * (cell_h + gap)
-        img = Image.open(SCREENS / file).convert("RGB")
-        ratio = cell_w / (cell_h - cap_h)
-        img = img.crop((0, 0, img.width, min(img.height, int(img.width / ratio))))
-        buf = BytesIO()
-        img.save(buf, "PNG")
-        pic = slide.shapes.add_picture(BytesIO(buf.getvalue()), Emu(x), Emu(y), Emu(cell_w), Emu(cell_h - cap_h))
-        pic.line.color.rgb = RGBColor(0xDE, 0xE2, 0xE6)
+        img = Image.open(SCREENS / file)  # 노트북+스마트폰 목업(투명 배경) - 비율 유지
+        box_h = cell_h - cap_h
+        w = min(cell_w, int(box_h * img.width / img.height))
+        h = int(w * img.height / img.width)
+        slide.shapes.add_picture(str(SCREENS / file), Emu(x + (cell_w - w) // 2), Emu(y + (box_h - h) // 2), Emu(w), Emu(h))
         tb = slide.shapes.add_textbox(Emu(x), Emu(y + cell_h - cap_h), Emu(cell_w), Emu(cap_h))
+        tb.text_frame.paragraphs[0].alignment = 2
         run = tb.text_frame.paragraphs[0].add_run()
         run.text = caption
         run.font.size = Pt(12)
@@ -176,6 +176,15 @@ def build_pptx() -> Path:
             if shp.name == "TextBox 7" and shp.text_frame.text.isdigit():
                 shp.text_frame.paragraphs[0].runs[0].text = str(int(shp.text_frame.text) + 1)
 
+    for slide in prs.slides:
+        for shp in slide.shapes:
+            if shp.has_text_frame:
+                for p in shp.text_frame.paragraphs:
+                    if p.text in spec.PPTX_FINAL and p.runs:
+                        p.runs[0].text = spec.PPTX_FINAL[p.text]
+                        for r in p.runs[1:]:
+                            r.text = ""
+
     text = "\n".join(shp.text_frame.text for s in prs.slides for shp in s.shapes if shp.has_text_frame)
     text += "\n".join(c.text for s in prs.slides for shp in s.shapes if getattr(shp, "has_table", False) and shp.has_table
                       for r in shp.table.rows for c in r.cells)
@@ -199,7 +208,10 @@ def main() -> None:
     if args.no_pdf:
         return
 
-    from office_com import hwpx_refresh_and_pdf, pptx_to_pdf
+    from office_com import hwpx_refresh_and_pdf, pptx_animate, pptx_to_pdf
+
+    pptx_animate(pptx_out)
+    shutil.copyfile(pptx_out, DOCS / "presentation" / "nomadpick.pptx")  # GitHub Pages 발표용(영문 파일명)
 
     pairs = []
     for path in hwpx_out:

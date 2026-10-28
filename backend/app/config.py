@@ -55,6 +55,8 @@ class Settings:
         self.playwright_channel = os.getenv("PLAYWRIGHT_CHANNEL", "chromium").strip() or None
         self.playwright_timeout_ms = int(os.getenv("PLAYWRIGHT_TIMEOUT_MS", "45000"))
         self.playwright_block_media = _bool("PLAYWRIGHT_BLOCK_MEDIA", True)
+        # 차단할 리소스 유형 (HTML/JSON 파싱에 불필요 → 메모리·대역폭 절약)
+        self.playwright_block_types = {t.strip() for t in os.getenv("PLAYWRIGHT_BLOCK_TYPES", "image,media,font,stylesheet,texttrack,manifest").split(",") if t.strip()}
         self.enable_scheduler = _bool("ENABLE_SCHEDULER", False)
         self.collect_on_startup = _bool("COLLECT_ON_STARTUP", False)
 

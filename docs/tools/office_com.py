@@ -115,6 +115,48 @@ def hwpx_refresh_and_pdf(items: list[tuple[Path, Path]]) -> None:
         app.close()
 
 
+def pptx_animate(src: Path) -> None:
+    """발표용 애니메이션: 슬라이드 전환(부드럽게 페이드) + 제목·부제 페이드 → 본문 요소가 아래에서 차례로 등장.
+
+    모든 효과는 '이전 효과 다음'으로 자동 진행 → 클릭/→ 키는 다음 슬라이드로 넘어갈 때만 사용.
+    상단 바·구분선·푸터·쪽번호는 고정.
+    """
+    pythoncom.CoInitialize()
+    ppt = win32com.client.gencache.EnsureDispatch("PowerPoint.Application")
+    C = win32com.client.constants
+    fixed = {"Rectangle 1", "Rectangle 2", "Connector 5", "TextBox 6", "TextBox 7"}
+    pres = ppt.Presentations.Open(str(src), WithWindow=False)
+    try:
+        for slide in pres.Slides:
+            t = slide.SlideShowTransition
+            t.EntryEffect = C.ppEffectFadeSmoothly
+            t.Duration = 0.7
+            seq = slide.TimeLine.MainSequence
+            for k in range(seq.Count, 0, -1):
+                seq.Item(k).Delete()
+            shapes = [s for s in slide.Shapes if s.Name not in fixed]
+            first = slide.SlideIndex == 1 or slide.SlideIndex == pres.Slides.Count
+            for i, shp in enumerate(shapes):
+                is_title = shp.Name in {"TextBox 3", "TextBox 4"}
+                if first or is_title:
+                    eff = seq.AddEffect(shp, C.msoAnimEffectFade, 0, C.msoAnimTriggerAfterPrevious)
+                    eff.Timing.Duration = 0.6
+                elif shp.HasTable or shp.Type == 13:  # 표·그림: 확대 등장
+                    eff = seq.AddEffect(shp, C.msoAnimEffectZoom, 0, C.msoAnimTriggerAfterPrevious)
+                    eff.Timing.Duration = 0.6
+                else:  # 카드·수치·설명: 아래에서 떠오르기
+                    eff = seq.AddEffect(shp, C.msoAnimEffectFly, 0, C.msoAnimTriggerAfterPrevious)
+                    eff.EffectParameters.Direction = C.msoAnimDirectionBottom
+                    eff.Timing.Duration = 0.35 if len(shapes) <= 12 else 0.18  # 요소가 많은 슬라이드는 빠르게
+                eff.Timing.TriggerDelayTime = (0.05 if len(shapes) <= 12 else 0) if i else 0.2
+        pres.Save()
+        print("애니메이션:", src.name, pres.Slides.Count, "슬라이드")
+    finally:
+        pres.Close()
+        if ppt.Presentations.Count == 0:
+            ppt.Quit()
+
+
 def pptx_to_pdf(src: Path, pdf: Path) -> None:
     pythoncom.CoInitialize()
     ppt = win32com.client.Dispatch("PowerPoint.Application")

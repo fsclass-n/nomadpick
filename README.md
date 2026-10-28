@@ -11,7 +11,7 @@
 | 구분 | 주소 |
 |---|---|
 | 소개 페이지 · 시연 영상 | https://fsclass-n.github.io/nomadpick/ |
-| 발표 화면 (줌 프레젠테이션) | https://fsclass-n.github.io/nomadpick/docs/presentation/ |
+| 발표 화면 (PPTX 슬라이드쇼) | https://fsclass-n.github.io/nomadpick/docs/presentation/ |
 | 서비스 (Render) | https://nomadpick.onrender.com · API 문서 `/docs` |
 | 프런트엔드 (Netlify) | https://nomadpick.netlify.app |
 

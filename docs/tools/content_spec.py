@@ -343,3 +343,17 @@ PPTX_TEXT_EXACT = {
     "Render + EC2 + TiDB": "Netlify + Render + EC2 + TiDB",
     "약 3분": "약 3분 · nomadpick.duckdns.org",
 }
+
+# 모든 치환 후 최종 문구 (면접관 관점: 결과·수치·문제 해결을 제목에서 바로 전달)
+PPTX_FINAL = {
+    "RPA 기반 개인 맞춤형 여행상품 추천 서비스": "특가 비교 30분 → 5분, RPA 기반 맞춤 여행상품 추천",
+    "왜 만들었나": "응답자 83%가 30분 이상 비교",
+    "무엇을 하나": "수집 → 정제 → 추천 → 예약 연결",
+    "Netlify + Render + EC2 + TiDB": "경로별 자동 배포 · Netlify + Render + EC2 + TiDB",
+    "Python RPA 3종": "사람처럼 접속하는 로봇 3종",
+    "30분마다 자동 실행": "하루 26회, 사람 손 없이",
+    "Trouble Shooting": "실데이터에서 만난 문제 5가지와 해결",
+    "약 3분 · nomadpick.duckdns.org": "약 3분 · nomadpick.onrender.com 실서비스",
+    "Final-Project로": "목표 5개 모두 달성 → Final-Project로",
+    "Q & A": "Q & A  ·  fsclass-n.github.io/nomadpick",
+}

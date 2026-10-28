@@ -7,10 +7,11 @@
     옵션: --mode live|sample|auto  --sink direct|api
 """
 import argparse
+import asyncio
+import gc
 import logging
 import threading
 import time
-from contextlib import contextmanager
 from datetime import datetime, timedelta
 
 from backend.app.config import settings
@@ -29,39 +30,58 @@ _lock = threading.Lock()
 PARSE_FAIL_THRESHOLD = 20.0  # 파싱 실패율 20% 초과 시 경고
 
 
-@contextmanager
-def _browser(mode: str):
-    """live/auto 모드에서 사람처럼 동작하는 Playwright 브라우저 1개를 여행사 3곳이 함께 사용한다."""
-    if mode not in ("live", "auto"):
-        yield None
-        return
+async def _collect_live_async() -> dict | None:
+    """Playwright(Async) 브라우저 1개로 여행사 3곳을 차례로 수집. 여행사마다 컨텍스트를 열고 닫으며, 브라우저는 반드시 종료."""
     try:
-        browser = HumanBrowser().__enter__()
+        browser = await HumanBrowser().__aenter__()
     except Exception as e:  # 브라우저 미설치·메모리 부족 등 → auto 모드는 sample 로 대체
         log.error("Playwright 브라우저 시작 실패: %s", e)
-        yield None
-        return
+        return None
+    results = {}
     try:
-        yield browser
+        for cls in COLLECTORS:
+            collector = cls()
+            try:
+                results[collector.agency] = await collector.collect_live(browser)
+            except Exception as e:
+                log.exception("[%s] live 수집 실패", collector.agency)
+                from .collector.base import CollectResult
+                results[collector.agency] = CollectResult(agency=collector.agency, messages=[f"live 수집 실패: {str(e)[:200]}"])
+            gc.collect()
     finally:
-        browser.__exit__(None, None, None)
+        await browser.__aexit__(None, None, None)
+    return results
+
+
+def collect_live_all(mode: str) -> dict | None:
+    """동기 코드(스케줄러 스레드·BackgroundTasks)에서 호출. 이미 이벤트 루프가 도는 스레드라면 별도 스레드에서 실행."""
+    if mode not in ("live", "auto"):
+        return None
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(_collect_live_async())
+    box = {}
+    t = threading.Thread(target=lambda: box.update(r=asyncio.run(_collect_live_async())))
+    t.start()
+    t.join()
+    return box.get("r")
 
 
 def run_deals(sink, mode: str | None = None, at: datetime | None = None, write_log: bool = True) -> dict:
-    """BOT-01: 여행사 3곳 특가 수집(Playwright) → pandas 정제 → upsert + 가격 스냅샷 → 로그."""
+    """BOT-01: 여행사 3곳 특가 수집(Playwright Async) → pandas 정제 → upsert + 가격 스냅샷 → 로그."""
     at = at or now_kst()
     mode = mode or settings.rpa_source_mode
-    with _browser(mode) as browser:
-        return _run_deals(sink, mode, at, write_log, browser)
+    return _run_deals(sink, mode, at, write_log, collect_live_all(mode))
 
 
-def _run_deals(sink, mode: str, at: datetime, write_log: bool, browser) -> dict:
+def _run_deals(sink, mode: str, at: datetime, write_log: bool, live: dict | None) -> dict:
     totals = {}
     for cls in COLLECTORS:
         started = now_kst()
         collector = cls()
         try:
-            result = collector.collect(at, mode, browser)
+            result = collector.collect(at, mode, (live or {}).get(collector.agency))
             if mode == "auto" and result.source == "sample" and sink.has_live(collector.agency):
                 # live 실패 시 이미 적재된 실데이터를 sample 로 덮어쓰지 않는다(기존 live 상품 유지)
                 if write_log:
