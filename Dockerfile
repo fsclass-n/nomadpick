@@ -14,8 +14,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     MALLOC_ARENA_MAX=2 \
     # 저메모리 수집 기본값: 렌더링에 필요 없는 리소스 차단
     PLAYWRIGHT_BLOCK_MEDIA=true \
-    PLAYWRIGHT_BLOCK_TYPES=image,media,font,stylesheet,texttrack,manifest     PLAYWRIGHT_TIMEOUT_MS=30000     # RPA 는 별도 저우선순위 프로세스로 실행: 15분·300MB 를 넘으면 Chromium 까지 강제 종료 → 웹 서버 502 방지
-    RPA_ISOLATED=true     RPA_JOB_TIMEOUT_SEC=900     RPA_AGENCY_TIMEOUT_SEC=240     RPA_MEMORY_LIMIT_MB=300     RPA_RETRIES=1
+    PLAYWRIGHT_BLOCK_TYPES=image,media,font,stylesheet,texttrack,manifest \
+    PLAYWRIGHT_TIMEOUT_MS=30000 \
+    # RPA 는 별도 저우선순위 프로세스로 실행: 15분·300MB 를 넘으면 Chromium 까지 강제 종료 → 웹 서버 502 방지
+    RPA_ISOLATED=true \
+    RPA_JOB_TIMEOUT_SEC=900 \
+    RPA_AGENCY_TIMEOUT_SEC=240 \
+    RPA_MEMORY_LIMIT_MB=300 \
+    RPA_RETRIES=1
 
 # 리포트 차트(Matplotlib/Seaborn)·브라우저 한글 폰트, 시간대
 RUN apt-get update \
