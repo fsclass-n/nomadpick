@@ -1,8 +1,8 @@
 # NomadPick (노마드픽)
 
 <p align="center">
-  <a href="docs/video/nomadpick_demo.mp4"><img src="docs/md/images/thumbnail.png" alt="NomadPick 발표·시연 영상" width="760"></a>
-  <br><sub>▶ 썸네일을 누르면 10분 발표·시연 영상(MP4)으로 이동합니다</sub>
+  <a href="https://fsclass-n.github.io/nomadpick/"><img src="docs/md/images/thumbnail.png" alt="NomadPick 발표·시연 영상" width="760"></a>
+  <br><sub>▶ 썸네일을 누르면 영상 페이지(GitHub Pages)가 열리고 바로 재생됩니다</sub>
 </p>
 
 > RPA 기반 **개인 맞춤형 여행상품 추천** 서비스 — 3조 (김길동(조장), 박미금, 이오리, 홍기흥)
@@ -21,7 +21,8 @@ RPA(Playwright)가 여러 여행사(하나투어 · 모두투어 · 노랑풍선
 
 | 항목 | 내용 |
 |---|---|
-| 영상 | [`docs/video/nomadpick_demo.mp4`](docs/video/nomadpick_demo.mp4) (10분, H.264/AAC, 100MB 미만) |
+| 영상 페이지 | https://fsclass-n.github.io/nomadpick/ (GitHub Pages, `index.html` 의 video 태그로 바로 재생·챕터 이동) |
+| 영상 파일 | [`docs/video/nomadpick_demo.mp4`](docs/video/nomadpick_demo.mp4) (10분, H.264/AAC, 100MB 미만) |
 | 구성 | PPT 발표(3분) → 일반 회원 시연(3분) → 관리자 시연(2분 30초) → 클로징(1분) |
 | 대본·연출 | [docs/md/07_발표영상_대본.md](docs/md/07_발표영상_대본.md) |
 | 압축 도구 | `python docs/tools/compress_video.py 원본.mp4 docs/video/nomadpick_demo.mp4 --target-mb 90` |

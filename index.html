@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NomadPick 발표·시연 영상 | 3조</title>
+  <meta name="description" content="RPA 기반 개인 맞춤형 여행상품 추천 서비스 NomadPick - 10분 발표·시연 영상">
+  <meta property="og:title" content="NomadPick 발표·시연 영상">
+  <meta property="og:image" content="https://fsclass-n.github.io/nomadpick/docs/md/images/thumbnail.png">
+  <link rel="icon" href="frontend/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Pretendard", "Malgun Gothic", sans-serif; background: #0b1220; color: #e9eef7; }
+    header { padding: 28px 20px 12px; text-align: center; }
+    header h1 { margin: 0; font-size: 28px; letter-spacing: -.5px; }
+    header h1 span { color: #4dabf7; }
+    header p { margin: 8px 0 0; color: #9fb0c8; }
+    .player { position: relative; max-width: 1100px; margin: 16px auto; padding: 0 16px; }
+    video { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.5); display: block; }
+    #unmute { position: absolute; top: 18px; right: 34px; display: none; padding: 10px 16px; border: 0; border-radius: 999px;
+              background: #fd7e14; color: #fff; font: 600 15px "Pretendard", sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+    .chapters { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .chapters button { border: 1px solid #2b3a55; background: #121c30; color: #cfe0ff; border-radius: 999px; padding: 8px 14px;
+                       font: 500 14px "Pretendard", sans-serif; cursor: pointer; }
+    .chapters button:hover { background: #1c2a46; }
+    .links { max-width: 1100px; margin: 22px auto 40px; padding: 0 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .links a { display: block; padding: 14px 16px; border-radius: 12px; background: #121c30; border: 1px solid #22314d; color: #e9eef7; text-decoration: none; }
+    .links a b { display: block; color: #4dabf7; margin-bottom: 4px; }
+    .links a small { color: #9fb0c8; }
+    footer { text-align: center; color: #6f819c; font-size: 13px; padding-bottom: 28px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span>NomadPick</span> 발표·시연 영상</h1>
+    <p>RPA 기반 개인 맞춤형 여행상품 추천 서비스 · 3조 김길동(조장) · 박미금 · 이오리 · 홍기흥 · 약 10분</p>
+  </header>
+
+  <div class="player">
+    <video id="video" controls playsinline preload="metadata" poster="docs/md/images/thumbnail.png">
+      <source src="docs/video/nomadpick_demo.mp4" type="video/mp4">
+      브라우저가 video 태그를 지원하지 않습니다. <a href="docs/video/nomadpick_demo.mp4">영상 내려받기</a>
+    </video>
+    <button id="unmute" type="button">소리 켜기</button>
+  </div>
+
+  <div class="chapters" id="chapters">
+    <button data-t="0">PPT 발표</button>
+    <button data-t="203">화면 전환</button>
+    <button data-t="227">일반 회원 시연</button>
+    <button data-t="403">관리자 시연</button>
+    <button data-t="537">클로징</button>
+  </div>
+
+  <div class="links">
+    <a href="https://github.com/fsclass-n/nomadpick"><b>GitHub 저장소</b><small>소스코드 · 산출물 · README</small></a>
+    <a href="https://nomadpick.onrender.com"><b>서비스 바로가기</b><small>nomadpick.onrender.com (Render)</small></a>
+    <a href="https://nomadpick.netlify.app"><b>프런트엔드</b><small>nomadpick.netlify.app (Netlify)</small></a>
+    <a href="https://github.com/fsclass-n/nomadpick/blob/main/docs/md/07_%EB%B0%9C%ED%91%9C%EC%98%81%EC%83%81_%EB%8C%80%EB%B3%B8.md"><b>발표 대본</b><small>나레이션 · 연출 가이드</small></a>
+    <a href="docs/video/nomadpick_demo.mp4" download><b>영상 내려받기</b><small>MP4 · H.264/AAC</small></a>
+  </div>
+
+  <footer>Semi-Project · 심화_생성형 AI와 AWS 클라우드를 활용한 풀스택 &amp; 자동화 실무 개발</footer>
+
+  <script>
+    const video = document.getElementById("video");
+    const unmute = document.getElementById("unmute");
+
+    // 페이지에 들어오면 바로 재생. 브라우저가 소리 있는 자동 재생을 막으면 음소거로 재생하고 [소리 켜기] 표시
+    async function start() {
+      try {
+        video.muted = false;
+        await video.play();
+      } catch (_) {
+        video.muted = true;
+        try { await video.play(); unmute.style.display = "block"; } catch (e) { /* 사용자가 재생 버튼을 누르면 재생 */ }
+      }
+    }
+    unmute.addEventListener("click", () => { video.muted = false; video.volume = 1; unmute.style.display = "none"; video.play(); });
+    video.addEventListener("volumechange", () => { if (!video.muted) unmute.style.display = "none"; });
+
+    document.getElementById("chapters").addEventListener("click", (e) => {
+      const t = e.target.dataset.t;
+      if (t === undefined) return;
+      video.currentTime = Number(t);
+      video.play();
+      video.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    start();
+  </script>
+</body>
+</html>
