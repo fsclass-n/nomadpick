@@ -9,6 +9,8 @@
 
 ## 작업 규칙 (사용자 지정)
 - 작업을 마치면 **항상 커밋 후 `main` 에 푸시**한다 (별도 확인 없이). `.env`·비밀 값은 커밋하지 않는다.
+- 작업 결과 보고·답변은 **무조건 한글**로 작성한다.
+- `.env` 의 `DATABASE_URL` DB 이름은 `nomadpick` (같은 TiDB 클러스터의 `buytiming` 은 다른 프로젝트 DB - 사용 금지)
 
 ## 명령
 - 서버: `.venv/Scripts/python.exe -m uvicorn backend.app.main:app --reload`
