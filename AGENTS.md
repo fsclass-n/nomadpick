@@ -7,6 +7,9 @@
   - Windows 에서는 `TZ` 환경 변수를 제거함(CRT 가 IANA TZ 미지원) - 시간은 `backend/app/utils.py` 의 KST 함수 사용
 - DB 는 TiDB 만 사용 (SQLite 미사용). 로컬 테스트도 TiDB, pytest 는 `nomadpick_test` DB 를 자동 생성·초기화
 
+## 작업 규칙 (사용자 지정)
+- 작업을 마치면 **항상 커밋 후 `main` 에 푸시**한다 (별도 확인 없이). `.env`·비밀 값은 커밋하지 않는다.
+
 ## 명령
 - 서버: `.venv/Scripts/python.exe -m uvicorn backend.app.main:app --reload`
 - 테스트: `.venv/Scripts/python.exe -m pytest` (루트 `conftest.py` 가 TiDB `nomadpick_test`·sample 모드 설정, DB 정보 없으면 API 테스트 생략)
