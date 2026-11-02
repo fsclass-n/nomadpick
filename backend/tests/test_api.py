@@ -226,6 +226,16 @@ def test_accumulate_with_retention_and_keep_missing_values(client):
     assert titles["보관테스트 이미지"]["image_url"] == "https://img/real.jpg"  # 다른 엔진의 빈 값이 실제 이미지를 지우지 않음
     assert titles["보관테스트 빠짐"]["last_seen_at"] < titles["보관테스트 이미지"]["last_seen_at"]
 
+    # 같은 상품코드가 다른 출발일로 다시 들어오면(기간 시작일 변경·출발일 해석 수정) 이전 행은 숨김 → 중복 노출 없음
+    later = (now + timedelta(days=31)).date()
+    sink.products_bulk("modetour", now + timedelta(minutes=30), "live", [item("RET-MISS", "보관테스트 빠짐", depart=later)])
+    rows = [i for i in client.get("/api/v1/products", params={"q": "보관테스트 빠짐"}).json()["items"]]
+    assert [r["depart_date"] for r in rows] == [later.isoformat()]
+    # 같은 수집 안의 여러 출발일은 모두 유지
+    sink.products_bulk("modetour", now + timedelta(minutes=60), "live",
+                       [item("RET-MULTI", "보관테스트 여러출발", depart=future), item("RET-MULTI", "보관테스트 여러출발", depart=later)])
+    assert len(client.get("/api/v1/products", params={"q": "보관테스트 여러출발"}).json()["items"]) == 2
+
 
 def test_fallback_server_only_fills_gaps(client):
     """fallback(Render) 은 최근 25분 안에 live 수집 성공이 없는 여행사만 대신 수집한다."""

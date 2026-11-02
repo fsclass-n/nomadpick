@@ -4,7 +4,7 @@ API(/rpa/*) 와 서버 내장 스케줄러(direct sink) 가 같은 함수를 사
 """
 from datetime import date, datetime
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.orm import Session
 
 from ..models import Agency, Airport, ExcelReport, FlightSchedule, PriceSnapshot, RpaJobLog, TravelProduct
@@ -76,7 +76,7 @@ def upsert_products(db: Session, agency_code: str, collected_at: datetime, sourc
     deactivated = 0
     if touched:
         cutoff = retention_cutoff(collected_at)
-        deactivated = db.execute(
+        deactivated += db.execute(
             update(TravelProduct)
             .where(TravelProduct.agency_id == agency.id, TravelProduct.is_active.is_(True),
                    TravelProduct.last_seen_at < cutoff)
@@ -93,6 +93,14 @@ def upsert_products(db: Session, agency_code: str, collected_at: datetime, sourc
                        .where(TravelProduct.agency_id == agency.id, TravelProduct.is_active.is_(False),
                               TravelProduct.source == "live", TravelProduct.last_seen_at >= cutoff)
                        .values(is_active=True))
+        # 같은 상품코드는 가장 최근에 확인된 행만 노출 - 기간 상품의 시작일이 매일 바뀌거나 출발일 해석이 바뀌어
+        # 행이 새로 생기면 이전 행은 대체된 것 (같은 수집에서 들어온 여러 출발일은 확인 시각이 같아 모두 유지)
+        deactivated += db.execute(text("""
+            UPDATE travel_products p
+            JOIN (SELECT product_code, MAX(last_seen_at) AS latest FROM travel_products
+                  WHERE agency_id = :aid AND is_active = 1 GROUP BY product_code) t ON t.product_code = p.product_code
+            SET p.is_active = 0
+            WHERE p.agency_id = :aid AND p.is_active = 1 AND p.last_seen_at < t.latest"""), {"aid": agency.id}).rowcount
     db.execute(update(TravelProduct).where(last_depart_date() < today_kst(), TravelProduct.is_active.is_(True))
                .values(is_active=False))
     fill_missing_images(db)
