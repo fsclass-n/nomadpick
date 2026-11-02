@@ -47,18 +47,29 @@
         <input type="email" class="form-control form-control-lg" id="email" name="email" maxlength="100" autocomplete="username" placeholder="you@example.com" required>
       </div>
       <div class="mb-3">
-        <label class="form-label" for="password">비밀번호 <small class="text-secondary">(8자 이상)</small></label>
+        <label class="form-label" for="password">비밀번호</label>
         <div class="np-password-field">
-          <input type="password" class="form-control form-control-lg" id="password" name="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8자 이상의 비밀번호" required>
+          <input type="password" class="form-control form-control-lg" id="password" name="password" minlength="8" maxlength="20" autocomplete="new-password" placeholder="영문·숫자·특수문자 조합 8~20자" aria-describedby="pwStrength pwRules" required>
           <button type="button" class="np-password-toggle" data-password-toggle="password" aria-controls="password" aria-label="비밀번호 표시" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
         </div>
       </div>
+      <p class="np-caps d-none" data-caps-for="password"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Caps Lock이 켜져 있습니다.</p>
+      <div class="np-pw-meter" id="pwStrength" aria-live="polite"><span class="np-pw-bar"><i></i><i></i><i></i></span><b>안전도</b><em>-</em></div>
+      <ul class="np-pw-rules" id="pwRules">
+        <li data-rule="length">8~20자</li>
+        <li data-rule="mix">영문 · 숫자 · 특수문자 각 1자 이상</li>
+        <li data-rule="chars">공백 · 한글 사용 불가</li>
+        <li data-rule="repeat">같은 문자 3번 연속 불가 (aaa, 111)</li>
+        <li data-rule="sequence">연속 문자·숫자 3자 불가 (abc, 123)</li>
+        <li data-rule="email">이메일 아이디 포함 불가</li>
+      </ul>
       <div class="mb-3">
         <label class="form-label" for="password2">비밀번호 확인</label>
         <div class="np-password-field">
-          <input type="password" class="form-control form-control-lg" id="password2" name="password2" autocomplete="new-password" placeholder="비밀번호를 한 번 더 입력해 주세요" required>
+          <input type="password" class="form-control form-control-lg" id="password2" name="password2" maxlength="20" autocomplete="new-password" placeholder="비밀번호를 한 번 더 입력해 주세요" required>
           <button type="button" class="np-password-toggle" data-password-toggle="password2" aria-controls="password2" aria-label="비밀번호 확인 표시" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
         </div>
+        <p class="np-pw-match" id="pwMatch" aria-live="polite"></p>
       </div>
       <div class="alert alert-danger d-none py-2" id="error" role="alert"></div>
       <button class="btn btn-primary btn-lg w-100" type="submit" id="submitBtn">가입하고 선호 설정하기<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>

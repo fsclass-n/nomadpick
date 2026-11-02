@@ -10,7 +10,7 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 class SignupIn(BaseModel):
     email: str = Field(max_length=100)
-    password: str = Field(min_length=8, max_length=64)
+    password: str = Field(min_length=1, max_length=64)  # 세부 규칙은 security.password_problem
     name: str = Field(min_length=1, max_length=50)
 
     @field_validator("email")

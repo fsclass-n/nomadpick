@@ -55,10 +55,11 @@
           <div class="mb-3">
             <label class="form-label" for="password">비밀번호</label>
             <div class="np-password-field">
-              <input type="password" class="form-control form-control-lg" id="password" name="password" autocomplete="current-password" placeholder="8자 이상" required>
+              <input type="password" class="form-control form-control-lg" id="password" name="password" autocomplete="current-password" placeholder="비밀번호를 입력해 주세요" required>
               <button type="button" class="np-password-toggle" data-password-toggle="password" aria-controls="password" aria-label="비밀번호 표시" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
             </div>
           </div>
+          <p class="np-caps d-none" data-caps-for="password"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Caps Lock이 켜져 있습니다.</p>
           <div class="alert alert-danger d-none py-2" id="error" role="alert"></div>
           <button class="btn btn-primary btn-lg w-100" type="submit" id="submitBtn">로그인<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
         </form>

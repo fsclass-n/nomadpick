@@ -16,6 +16,49 @@ document.querySelectorAll("[data-password-toggle]").forEach((button) => {
   });
 });
 
+/* 비밀번호 규칙 - 서버 backend/app/security.py password_problem 과 동일 */
+const PW_SPECIALS = "!@#$%^&*()-_=+[]{};:'\",.<>/?\\|`~";
+const PW_ORDER = ["length", "chars", "mix", "repeat", "sequence", "email"];
+const PW_MESSAGES = {
+  length: "비밀번호는 8~20자로 입력해 주세요.",
+  chars: "비밀번호는 영문, 숫자, 특수문자만 사용할 수 있습니다. (공백·한글 불가)",
+  mix: "비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.",
+  repeat: "같은 문자를 3번 이상 연속해서 사용할 수 없습니다.",
+  sequence: "연속된 문자나 숫자(abc, 123 등)를 3자 이상 사용할 수 없습니다.",
+  email: "비밀번호에 이메일 아이디를 포함할 수 없습니다.",
+};
+const hasSequence = (pw) => {
+  const s = pw.toLowerCase();
+  for (let i = 0; i + 2 < s.length; i += 1) {
+    const c = s.slice(i, i + 3);
+    if (!/^(\d{3}|[a-z]{3})$/.test(c)) continue;
+    const d1 = c.charCodeAt(1) - c.charCodeAt(0);
+    if (Math.abs(d1) === 1 && c.charCodeAt(2) - c.charCodeAt(1) === d1) return true;
+  }
+  return false;
+};
+NP.passwordChecks = (pw, email = "") => {
+  const local = email.split("@")[0].toLowerCase();
+  const filled = pw.length > 0;
+  return {
+    length: pw.length >= 8 && pw.length <= 20,
+    chars: filled && [...pw].every((c) => /[A-Za-z0-9]/.test(c) || PW_SPECIALS.includes(c)),
+    mix: /[A-Za-z]/.test(pw) && /\d/.test(pw) && [...pw].some((c) => PW_SPECIALS.includes(c)),
+    repeat: filled && !/(.)\1\1/.test(pw),
+    sequence: filled && !hasSequence(pw),
+    email: filled && !(local.length >= 4 && pw.toLowerCase().includes(local)),
+  };
+};
+
+/* Caps Lock 안내 (로그인·회원가입 공통) */
+document.querySelectorAll("[data-caps-for]").forEach((note) => {
+  const field = document.getElementById(note.dataset.capsFor);
+  const update = (e) => note.classList.toggle("d-none", !e.getModifierState?.("CapsLock"));
+  field.addEventListener("keydown", update);
+  field.addEventListener("keyup", update);
+  field.addEventListener("blur", () => note.classList.add("d-none"));
+});
+
 function showError(msg) {
   errorBox.textContent = msg;
   errorBox.classList.remove("d-none");
@@ -95,13 +138,40 @@ if (document.getElementById("stTotal")) {
 
 const signupForm = document.getElementById("signupForm");
 if (signupForm) {
+  const f = signupForm;
+  const rules = document.querySelectorAll("#pwRules [data-rule]");
+  const meter = document.getElementById("pwStrength");
+  const match = document.getElementById("pwMatch");
+  const LEVELS = [["", "-"], ["weak", "위험"], ["fair", "보통"], ["strong", "안전"]];
+  const refresh = () => {
+    const pw = f.password.value;
+    const checks = NP.passwordChecks(pw, f.email.value.trim());
+    rules.forEach((li) => {
+      li.classList.toggle("ok", checks[li.dataset.rule]);
+      li.classList.toggle("bad", pw.length > 0 && !checks[li.dataset.rule]);
+    });
+    const valid = PW_ORDER.every((k) => checks[k]);
+    const level = !pw ? 0 : !valid ? 1 : pw.length >= 12 || (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) ? 3 : 2;
+    meter.dataset.level = LEVELS[level][0];
+    meter.querySelector("em").textContent = LEVELS[level][1];
+    f.password.setAttribute("aria-invalid", String(pw.length > 0 && !valid));
+    const p2 = f.password2.value;
+    match.className = `np-pw-match${p2 ? (p2 === pw ? " ok" : " bad") : ""}`;
+    match.innerHTML = !p2 ? "" : p2 === pw
+      ? '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>비밀번호가 일치합니다.'
+      : '<i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>비밀번호가 일치하지 않습니다.';
+  };
+  [f.password, f.password2, f.email].forEach((el) => el.addEventListener("input", refresh));
+  refresh();
+
   signupForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const f = signupForm;
     if (!f.name.value.trim()) return showError("이름을 입력해 주세요.");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.value.trim())) return showError("올바른 이메일을 입력해 주세요.");
-    if (f.password.value.length < 8) return showError("비밀번호는 8자 이상이어야 합니다.");
-    if (f.password.value !== f.password2.value) return showError("비밀번호 확인이 일치하지 않습니다.");
+    const checks = NP.passwordChecks(f.password.value, f.email.value.trim());
+    const failed = PW_ORDER.find((k) => !checks[k]);
+    if (failed) { f.password.focus(); return showError(PW_MESSAGES[failed]); }
+    if (f.password.value !== f.password2.value) { f.password2.focus(); return showError("비밀번호 확인이 일치하지 않습니다."); }
     submit("/auth/signup", { name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value });
   });
 }

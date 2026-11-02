@@ -36,18 +36,37 @@ def test_health_and_static(client):
 
 
 def test_signup_login_flow(client):
-    r = client.post("/api/v1/auth/signup", json={"email": "New@Test.com", "password": "password1", "name": "신규"})
+    r = client.post("/api/v1/auth/signup", json={"email": "New@Test.com", "password": "Trip#2026go", "name": "신규"})
     assert r.status_code == 201 and r.json()["has_preference"] is False
-    assert client.post("/api/v1/auth/signup", json={"email": "new@test.com", "password": "password1", "name": "x"}).status_code == 409
+    assert client.post("/api/v1/auth/signup", json={"email": "new@test.com", "password": "Trip#2026go", "name": "x"}).status_code == 409
     assert client.post("/api/v1/auth/login", json={"email": "new@test.com", "password": "wrong"}).json()["code"] == "INVALID_CREDENTIALS"
-    h = login(client, "new@test.com", "password1")
+    h = login(client, "new@test.com", "Trip#2026go")
     assert client.get("/api/v1/users/me", headers=h).json()["email"] == "new@test.com"
     assert client.get("/api/v1/users/me").status_code == 401
     assert client.get("/api/v1/users/me", headers={"Authorization": "Bearer broken"}).json()["code"] == "INVALID_TOKEN"
 
 
+@pytest.mark.parametrize("password, code", [
+    ("Ab1!", "8~20자"), ("Abcd!2468" * 3, "8~20자"), ("여행비번1234!", "영문, 숫자, 특수문자만"), ("Trip 2026!", "영문, 숫자, 특수문자만"),
+    ("trip20262026", "각각 1자 이상"), ("Trip!!!2026", "3번 이상"), ("Xabc!2468", "연속된"), ("Trip!1234x", "연속된"),
+    ("Pwtester!29", "이메일 아이디"),
+])
+def test_signup_password_rules(client, password, code):
+    r = client.post("/api/v1/auth/signup", json={"email": "tester@test.com", "password": password, "name": "규칙"})
+    assert r.status_code == 422 and r.json()["code"] == "WEAK_PASSWORD" and code in r.json()["message"]
+
+
+def test_password_rule_accepts_strong_and_login_is_not_rule_checked(client):
+    from backend.app.security import password_problem
+
+    for ok in ("Trip#2026go", "Demo!2026", "nomad_Pick7", "Zx9!kq2#Lm"):
+        assert password_problem(ok, "someone@test.com") is None, ok
+    # 로그인은 규칙 검사 없이 일치 여부만 확인 (기존 계정 호환, 규칙 노출 방지)
+    assert client.post("/api/v1/auth/login", json={"email": "new@test.com", "password": "a"}).json()["code"] == "INVALID_CREDENTIALS"
+
+
 def test_preferences_save_and_affect_recommendations(client):
-    h = login(client, "new@test.com", "password1")
+    h = login(client, "new@test.com", "Trip#2026go")
     assert client.get("/api/v1/preferences", headers=h).json() is None
     no_pref = client.get("/api/v1/recommendations", headers=h).json()
     assert "선호 미설정" in no_pref[0]["reasons"][-1]

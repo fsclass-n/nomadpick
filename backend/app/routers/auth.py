@@ -6,7 +6,7 @@ from ..config import settings
 from ..database import get_db
 from ..models import User
 from ..schemas import DemoLoginIn, LoginIn, SignupIn, TokenOut, UserOut
-from ..security import api_error, create_token, get_current_user, hash_password, verify_password
+from ..security import api_error, create_token, get_current_user, hash_password, password_problem, verify_password
 
 router = APIRouter(tags=["인증·회원"])
 
@@ -18,6 +18,8 @@ def _token_response(user: User) -> TokenOut:
 
 @router.post("/auth/signup", response_model=TokenOut, status_code=status.HTTP_201_CREATED, summary="회원가입")
 def signup(body: SignupIn, db: Session = Depends(get_db)):
+    if problem := password_problem(body.password, body.email):
+        raise api_error(status.HTTP_422_UNPROCESSABLE_ENTITY, "WEAK_PASSWORD", problem)
     if db.scalar(select(User).where(User.email == body.email)):
         raise api_error(status.HTTP_409_CONFLICT, "EMAIL_EXISTS", "이미 가입된 이메일입니다.")
     user = User(email=body.email, password_hash=hash_password(body.password), name=body.name.strip())
