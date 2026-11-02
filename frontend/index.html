@@ -6,79 +6,81 @@
   <title>오늘의 특가 | NomadPick</title>
   <meta name="description" content="RPA가 하나투어·모두투어·노랑풍선 특가를 30분마다 수집하여 내 취향에 맞게 추천하는 NomadPick">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <main class="np-home">
-  <section class="np-home-hero">
+  <section class="np-home-hero" aria-labelledby="homeTitle">
     <div class="container position-relative">
       <span class="np-hero-kicker"><span class="np-live-dot"></span>실시간 특가 · RPA가 30분마다 업데이트</span>
-      <h1>여러 여행사 특가,<br><em>한 번에 비교하세요</em></h1>
+      <h1 id="homeTitle">여러 여행사 특가,<br><em>한 번에 비교하세요</em></h1>
       <p class="np-hero-lead">RPA가 하나투어 · 모두투어 · 노랑풍선의 특가를 30분마다 수집하고,<br class="d-none d-md-inline"> 내 여행 취향에 맞는 상품만 골라 추천합니다.</p>
       <form class="np-hero-search" id="heroSearch" role="search">
-        <i class="bi bi-geo-alt-fill"></i>
-        <input id="heroQ" type="search" placeholder="어디로 떠나세요? 도시 · 상품명 검색" maxlength="50" aria-label="도시·상품명 검색">
-        <button class="btn btn-warning" type="submit"><i class="bi bi-search me-1"></i>특가 찾기</button>
+        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+        <div class="np-search-field"><label for="heroQ">어디로 떠나세요?</label>
+          <input id="heroQ" type="search" placeholder="도시 · 상품명 검색" maxlength="50"></div>
+        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>특가 찾기</button>
       </form>
       <div class="np-hero-tags"><span>인기 여행지</span>
         <button type="button" data-q="다낭">다낭</button><button type="button" data-q="오사카">오사카</button>
         <button type="button" data-q="방콕">방콕</button><button type="button" data-q="세부">세부</button>
         <button type="button" data-q="괌">괌</button><button type="button" data-q="제주">제주</button>
       </div>
-      <div class="np-hero-stats">
-        <div class="np-stat"><i class="bi bi-airplane"></i><div><small>수집 상품</small><strong id="statTotal">-</strong></div></div>
-        <div class="np-stat"><i class="bi bi-buildings"></i><div><small>여행사</small><strong id="statAgencies">3곳</strong></div></div>
-        <div class="np-stat"><i class="bi bi-clock-history"></i><div><small>최근 수집</small><strong id="statUpdated">-</strong></div></div>
-      </div>
     </div>
     <a class="np-photo-credit" href="https://unsplash.com/photos/airplane-wing-over-clouds-during-sunset-2eUvys77PDc" target="_blank" rel="noopener">Photo by Fujiphilm on Unsplash</a>
   </section>
 
   <div class="container np-home-body">
+    <div class="np-hero-stats" aria-label="실시간 수집 현황">
+      <div class="np-stat"><i class="fa-solid fa-plane-departure" aria-hidden="true"></i><div><small>수집 상품</small><strong id="statTotal">-</strong></div></div>
+      <div class="np-stat"><i class="fa-solid fa-globe" aria-hidden="true"></i><div><small>여행사</small><strong id="statAgencies">3곳</strong></div></div>
+      <div class="np-stat"><i class="fa-regular fa-clock" aria-hidden="true"></i><div><small>최근 수집</small><strong id="statUpdated">-</strong></div></div>
+    </div>
     <!-- 필터 바: PC 는 상단 고정, 모바일은 오프캔버스 (BUG-03 조치) -->
-    <div class="d-flex d-lg-none justify-content-between align-items-center mb-3">
-      <button class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#filterPanel"><i class="bi bi-funnel me-1"></i>필터</button>
+    <div class="np-mobile-controls d-flex d-lg-none justify-content-between align-items-center mb-3">
+      <button class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#filterPanel" aria-controls="filterPanel"><i class="fa-solid fa-sliders me-2" aria-hidden="true"></i>필터</button>
       <select class="form-select w-auto" id="sortMobile" aria-label="정렬">
         <option value="discount">할인율순</option><option value="price">낮은 가격순</option><option value="depart">출발 임박순</option>
       </select>
     </div>
-    <div class="offcanvas-lg offcanvas-bottom" tabindex="-1" id="filterPanel" style="--bs-offcanvas-height: 75vh">
+    <div class="offcanvas-lg offcanvas-bottom" tabindex="-1" id="filterPanel" aria-labelledby="filterTitle" style="--bs-offcanvas-height: 75vh">
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title">필터</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#filterPanel"></button>
+        <h2 class="offcanvas-title h5" id="filterTitle">필터</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#filterPanel" aria-label="필터 닫기"></button>
       </div>
       <div class="offcanvas-body d-block">
         <form id="filterForm" class="np-filter p-3 mb-3 w-100">
+          <div class="np-filter-heading"><i class="fa-solid fa-sliders" aria-hidden="true"></i>내 여행에 맞는 특가 찾기</div>
           <div class="mb-3 d-flex flex-wrap gap-2" id="regionChips"></div>
           <div class="row g-2 align-items-end">
             <div class="col-6 col-lg-2">
-              <label class="form-label small text-secondary mb-1">예산(1인)</label>
-              <select class="form-select" name="price_max">
+              <label class="form-label small text-secondary mb-1" for="budgetSelect">예산(1인)</label>
+              <select class="form-select" name="price_max" id="budgetSelect">
                 <option value="">전체</option><option value="500000">50만 원 이하</option><option value="1000000">100만 원 이하</option>
                 <option value="1500000">150만 원 이하</option><option value="2000000">200만 원 이하</option><option value="3000000">300만 원 이하</option>
               </select>
             </div>
             <div class="col-6 col-lg-2">
-              <label class="form-label small text-secondary mb-1">출발월</label>
+              <label class="form-label small text-secondary mb-1" for="monthSelect">출발월</label>
               <select class="form-select" name="month" id="monthSelect"><option value="">전체</option></select>
             </div>
             <div class="col-6 col-lg-2">
-              <label class="form-label small text-secondary mb-1">여행사</label>
+              <label class="form-label small text-secondary mb-1" for="agencySelect">여행사</label>
               <select class="form-select" name="agency" id="agencySelect"><option value="">전체</option></select>
             </div>
             <div class="col-6 col-lg-2">
-              <label class="form-label small text-secondary mb-1">테마</label>
+              <label class="form-label small text-secondary mb-1" for="themeSelect">테마</label>
               <select class="form-select" name="theme" id="themeSelect"><option value="">전체</option></select>
             </div>
             <div class="col-12 col-lg-2">
-              <label class="form-label small text-secondary mb-1">검색</label>
-              <input class="form-control" name="q" placeholder="도시·상품명" maxlength="50">
+              <label class="form-label small text-secondary mb-1" for="filterQ">검색</label>
+              <input class="form-control" name="q" id="filterQ" placeholder="도시·상품명" maxlength="50">
             </div>
             <div class="col-12 col-lg-2 d-none d-lg-block">
-              <label class="form-label small text-secondary mb-1">정렬</label>
+              <label class="form-label small text-secondary mb-1" for="sortSelect">정렬</label>
               <select class="form-select" name="sort" id="sortSelect">
                 <option value="discount">할인율순</option><option value="price">낮은 가격순</option><option value="depart">출발 임박순</option>
               </select>
@@ -97,8 +99,8 @@
       <h2>오늘의 <em>특가</em></h2>
       <p class="np-section-sub">3개 여행사에서 지금 가장 크게 할인하는 상품을 모았어요</p>
       <div class="np-section-meta">
-        <span class="text-secondary small" id="resultInfo">불러오는 중...</span>
-        <a href="recommend.html" class="btn btn-outline-primary btn-sm rounded-pill px-3"><i class="bi bi-stars me-1"></i>내 취향 추천 보기</a>
+        <span class="text-secondary small" id="resultInfo" role="status">불러오는 중...</span>
+        <a href="recommend.html" class="btn btn-outline-primary btn-sm rounded-pill px-3"><i class="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true"></i>내 취향 추천 보기</a>
       </div>
     </div>
 
@@ -106,20 +108,20 @@
       <div class="np-card-wrap"><div class="skeleton"></div></div><div class="np-card-wrap"><div class="skeleton"></div></div>
       <div class="np-card-wrap"><div class="skeleton"></div></div><div class="np-card-wrap"><div class="skeleton"></div></div>
     </div>
-    <div class="np-more"><button class="np-btn-more d-none" id="moreBtn"><span>특가 더 보기</span><i class="bi bi-chevron-down"></i></button></div>
+    <div class="np-more"><button class="np-btn-more d-none" id="moreBtn" type="button"><span>특가 더 보기</span><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button></div>
 
     <section class="np-why">
-      <div class="np-why-item"><span><i class="bi bi-robot"></i></span><div><b>30분마다 자동 수집</b><p>3개 여행사 특가를 RPA가 대신 확인해요</p></div></div>
-      <div class="np-why-item"><span><i class="bi bi-stars"></i></span><div><b>취향 맞춤 추천</b><p>지역 · 예산 · 출발월로 Top 10 + 추천 이유</p></div></div>
-      <div class="np-why-item"><span><i class="bi bi-graph-down-arrow"></i></span><div><b>가격 변동 추적</b><p>가격 추이와 관심 상품 가격 하락 알림</p></div></div>
+      <div class="np-why-item"><span><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i></span><div><b>30분마다 자동 수집</b><p>3개 여행사 특가를 RPA가 대신 확인해요</p></div></div>
+      <div class="np-why-item"><span><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span><div><b>취향 맞춤 추천</b><p>지역 · 예산 · 출발월로 Top 10 + 추천 이유</p></div></div>
+      <div class="np-why-item"><span><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span><div><b>가격 변동 추적</b><p>가격 추이와 관심 상품 가격 하락 알림</p></div></div>
     </section>
 
     <section class="np-cta">
-      <div><span class="np-eyebrow text-white-50">PERSONALIZED</span><h3>내 여행 취향을 알려주세요</h3>
+      <div><span class="np-eyebrow">PERSONALIZED FOR YOU</span><h3>내 여행 취향을 알려주세요</h3>
         <p>1분이면 충분해요. 취향에 꼭 맞는 특가만 골라 이유와 함께 추천해 드립니다.</p></div>
       <div class="np-cta-actions">
-        <a class="np-cta-btn np-cta-primary" href="preferences.html"><i class="bi bi-sliders"></i>취향 설정하기<i class="bi bi-arrow-right np-cta-arrow"></i></a>
-        <a class="np-cta-btn np-cta-ghost" href="recommend.html"><i class="bi bi-stars"></i>추천 보기</a></div>
+        <a class="np-cta-btn np-cta-primary" href="preferences.html"><i class="fa-solid fa-sliders" aria-hidden="true"></i>취향 설정하기<i class="fa-solid fa-arrow-right np-cta-arrow" aria-hidden="true"></i></a>
+        <a class="np-cta-btn np-cta-ghost" href="recommend.html"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>추천 보기</a></div>
     </section>
   </div>
 </main>

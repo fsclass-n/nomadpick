@@ -5,48 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>로그인 | NomadPick</title>
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <meta name="description" content="NomadPick에 로그인하고 여행 취향에 맞는 특가, 관심 상품과 가격 변동을 한눈에 확인하세요.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="np-login-body">
 <main class="np-login">
     <!-- 왼쪽: 여행 사진 · 서비스 소개 -->
     <section class="np-login-visual" aria-label="NomadPick 소개">
+      <div class="np-visual-label">YOUR NEXT JOURNEY, PICKED.</div>
       <div class="np-login-copy">
-        <span class="badge rounded-pill text-bg-light text-primary mb-3"><i class="bi bi-robot"></i> RPA 실시간 특가 수집</span>
-        <h1 class="fw-bold">여행사 특가 비교,<br>이제 5분이면 충분해요</h1>
+        <span class="np-hero-kicker"><span class="np-live-dot"></span>RPA 실시간 특가 수집</span>
+        <h1>여행사 특가 비교,<br><em>이제 5분이면 충분해요</em></h1>
         <p class="mb-4">하나투어 · 모두투어 · 노랑풍선의 특가를 30분마다 모아<br class="d-none d-xl-inline">내 취향에 맞는 상품만 골라 추천해 드립니다.</p>
         <div class="np-login-stats">
           <div><b id="stTotal">-</b><span>수집 특가</span></div>
           <div><b>3곳</b><span>여행사</span></div>
           <div><b id="stUpdated">-</b><span>최근 수집</span></div>
         </div>
-        <ul class="list-unstyled np-login-points mt-4 mb-0">
-          <li><i class="bi bi-stars"></i> 취향 기반 Top 10 추천 + 추천 이유</li>
-          <li><i class="bi bi-graph-down-arrow"></i> 가격 추이 · 관심 상품 가격 하락 알림</li>
-          <li><i class="bi bi-airplane"></i> 국토교통부 국내선 항공편 정보</li>
+        <ul class="np-login-points">
+          <li><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> 취향 기반 Top 10 추천 + 추천 이유</li>
+          <li><i class="fa-solid fa-chart-line" aria-hidden="true"></i> 가격 추이 · 관심 상품 가격 하락 알림</li>
+          <li><i class="fa-solid fa-plane" aria-hidden="true"></i> 국토교통부 국내선 항공편 정보</li>
         </ul>
       </div>
       <a class="np-photo-credit" href="https://unsplash.com/photos/aerial-view-of-a-beach-with-waves-and-turquoise-water-BOIjpOyTKmE" target="_blank" rel="noopener">
-        <i class="bi bi-geo-alt"></i> El Nido, Palawan · Photo by Bernd Dittrich on Unsplash</a>
+        <i class="fa-solid fa-location-dot" aria-hidden="true"></i> El Nido, Palawan · Photo by Bernd Dittrich on Unsplash</a>
     </section>
 
     <!-- 오른쪽: 로그인 폼 -->
-<section class="np-login-form">
+    <section class="np-login-form" aria-labelledby="loginTitle">
       <div class="np-login-inner">
-        <h2 class="h3 fw-bold mb-1">로그인</h2>
-        <p class="text-secondary mb-4">로그인하고 내 취향에 맞는 특가를 추천받으세요.</p>
-
-        <div class="np-demo mb-4">
-          <div class="small fw-semibold text-secondary mb-2"><i class="bi bi-lightning-charge-fill text-warning"></i> 테스트 계정으로 바로 체험</div>
-          <div class="row g-2">
-            <div class="col-6"><button type="button" class="btn btn-outline-primary w-100 np-demo-btn" data-demo="USER">
-              <i class="bi bi-person-circle"></i><b>일반 회원</b><small>추천 · 관심 상품</small></button></div>
-            <div class="col-6"><button type="button" class="btn btn-outline-dark w-100 np-demo-btn" data-demo="ADMIN">
-              <i class="bi bi-shield-lock"></i><b>관리자</b><small>수집 모니터링 (조회 전용)</small></button></div>
-          </div>
+        <nav class="np-auth-tabs" aria-label="계정 메뉴">
+          <a href="login.html" aria-current="page">로그인</a><a href="signup.html">회원가입</a>
+        </nav>
+        <div class="np-auth-heading">
+          <span class="np-eyebrow">WELCOME BACK</span>
+          <h2 id="loginTitle">로그인</h2>
+          <p>로그인하고 내 취향에 맞는 특가를 추천받으세요.</p>
         </div>
 
         <form id="loginForm" novalidate>
@@ -56,24 +54,36 @@
           </div>
           <div class="mb-3">
             <label class="form-label" for="password">비밀번호</label>
-            <input type="password" class="form-control form-control-lg" id="password" name="password" autocomplete="current-password" placeholder="8자 이상" required>
+            <div class="np-password-field">
+              <input type="password" class="form-control form-control-lg" id="password" name="password" autocomplete="current-password" placeholder="8자 이상" required>
+              <button type="button" class="np-password-toggle" data-password-toggle="password" aria-controls="password" aria-label="비밀번호 표시" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+            </div>
           </div>
-          <div class="alert alert-danger d-none py-2" id="error"></div>
-          <button class="btn btn-primary btn-lg w-100" type="submit" id="submitBtn">로그인</button>
+          <div class="alert alert-danger d-none py-2" id="error" role="alert"></div>
+          <button class="btn btn-primary btn-lg w-100" type="submit" id="submitBtn">로그인<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
         </form>
 
-        <div class="np-divider my-4"><span>또는 SNS 계정으로 로그인</span></div>
-        <div class="d-grid gap-2">
+        <div class="np-demo">
+          <div class="np-demo-heading"><i class="fa-solid fa-bolt" aria-hidden="true"></i>테스트 계정으로 바로 체험</div>
+          <div class="row g-2">
+            <div class="col-6"><button type="button" class="btn w-100 np-demo-btn" data-demo="USER">
+              <i class="fa-regular fa-circle-user" aria-hidden="true"></i><b>일반 회원</b><small>추천 · 관심 상품</small></button></div>
+            <div class="col-6"><button type="button" class="btn w-100 np-demo-btn" data-demo="ADMIN">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i><b>관리자</b><small>수집 모니터링 (조회 전용)</small></button></div>
+          </div>
+        </div>
+        <div class="np-divider"><span>또는 SNS 계정으로 로그인</span></div>
+        <div class="np-sns-list">
           <button type="button" class="btn np-sns np-sns-google" data-sns="google">
-            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+            <i class="fa-brands fa-google" aria-hidden="true"></i>
             Google로 계속하기</button>
-          <button type="button" class="btn np-sns np-sns-naver" data-sns="naver"><span class="np-sns-n">N</span> 네이버로 계속하기</button>
+          <button type="button" class="btn np-sns np-sns-naver" data-sns="naver"><span class="np-sns-n" aria-hidden="true">N</span> 네이버로 계속하기</button>
           <button type="button" class="btn np-sns np-sns-kakao" data-sns="kakao">
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#191919" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7l-1.1 4c-.1.4.3.7.6.5l4.7-3.1c.4 0 .8.1 1.2.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
+            <i class="fa-solid fa-comment" aria-hidden="true"></i>
             카카오로 계속하기</button>
         </div>
 
-        <p class="text-center text-secondary mt-4 mb-0">아직 회원이 아니신가요? <a href="signup.html">회원가입</a></p>
+        <p class="np-auth-switch mb-0">아직 회원이 아니신가요? <a href="signup.html">회원가입</a></p>
       </div>
     </section>
 </main>

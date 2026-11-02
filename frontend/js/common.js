@@ -64,37 +64,38 @@ NP.download = async (path, fallbackName) => {
 NP.renderLayout = (active) => {
   const user = NP.auth.user();
   const link = (href, label, key, icon) =>
-    `<li class="nav-item"><a class="nav-link ${active === key ? "active" : ""}" href="${href}"${active === key ? ' aria-current="page"' : ""}><i class="bi ${icon} me-1"></i>${label}</a></li>`;
+    `<li class="nav-item"><a class="nav-link ${active === key ? "active" : ""}" href="${href}"${active === key ? ' aria-current="page"' : ""}><i class="fa-solid ${icon}" aria-hidden="true"></i>${label}</a></li>`;
   const right = user
     ? `<li class="nav-item dropdown">
-         <a class="nav-link dropdown-toggle np-user-btn" href="#" data-bs-toggle="dropdown">
+         <a class="nav-link dropdown-toggle np-user-btn" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
            <span class="np-avatar-sm">${NP.esc((user.name || "?").slice(0, 1))}</span>${NP.esc(user.name)}</a>
          <ul class="dropdown-menu dropdown-menu-end np-user-menu">
            <li class="px-3 py-2 small text-secondary">${user.role === "ADMIN" ? "관리자 계정" : "반가워요, " + NP.esc(user.name) + "님"}</li>
-           <li><a class="dropdown-item" href="preferences.html"><i class="bi bi-sliders me-2"></i>선호 설정</a></li>
-           <li><a class="dropdown-item" href="mypage.html"><i class="bi bi-heart me-2"></i>마이페이지</a></li>
+           <li><a class="dropdown-item" href="preferences.html"><i class="fa-solid fa-sliders me-2" aria-hidden="true"></i>선호 설정</a></li>
+           <li><a class="dropdown-item" href="mypage.html"><i class="fa-regular fa-heart me-2" aria-hidden="true"></i>마이페이지</a></li>
            <li><hr class="dropdown-divider"></li>
-           <li><button class="dropdown-item" id="np-logout"><i class="bi bi-box-arrow-right me-2"></i>로그아웃</button></li>
+           <li><button class="dropdown-item" id="np-logout"><i class="fa-solid fa-arrow-right-from-bracket me-2" aria-hidden="true"></i>로그아웃</button></li>
          </ul></li>`
-    : `<li class="nav-item"><a class="nav-link np-login-link" href="login.html"><i class="bi bi-person me-1"></i>로그인</a></li>
-       <li class="nav-item"><a class="btn np-signup-btn ms-lg-2" href="signup.html">회원가입</a></li>`;
+    : `<li class="nav-item"><a class="nav-link np-login-link" href="login.html">로그인</a></li>
+       <li class="nav-item"><a class="btn np-signup-btn ms-lg-3" href="signup.html">회원가입<i class="fa-solid fa-arrow-right ms-2" aria-hidden="true"></i></a></li>`;
 
   document.body.insertAdjacentHTML("afterbegin", `
     <div id="np-offline" class="np-offline small py-2 d-none"><div class="container">
-      <i class="bi bi-wifi-off me-1"></i>백엔드 서버에 연결하지 못해 <b>오프라인 데모 데이터</b>를 표시하고 있습니다.
+      <i class="fa-solid fa-cloud-arrow-down me-1" aria-hidden="true"></i>백엔드 서버에 연결하지 못해 <b>오프라인 데모 데이터</b>를 표시하고 있습니다.
       (Render 무료 인스턴스는 첫 접속 시 깨어나는 데 최대 1분이 걸릴 수 있습니다)
       <a href="#" onclick="location.reload();return false;" class="ms-2">다시 시도</a></div></div>
-    <nav class="navbar navbar-expand-lg np-navbar sticky-top">
+    <a class="np-skip-link" href="#mainContent">본문으로 바로가기</a>
+    <nav class="navbar navbar-expand-lg np-navbar sticky-top" aria-label="주 메뉴">
       <div class="container">
-        <a class="navbar-brand np-brand" href="index.html"><i class="bi bi-compass-fill"></i>NomadPick</a>
+        <a class="navbar-brand np-brand" href="index.html" aria-label="NomadPick 홈">${NP.brand()}</a>
         <button class="np-burger d-lg-none" id="npBurger" type="button" aria-label="메뉴 열기" aria-controls="npDrawer" aria-expanded="false">
           <span></span><span></span><span></span></button>
         <div class="collapse navbar-collapse" id="npNav">
           <ul class="navbar-nav mx-auto np-main-nav">
-            ${link("index.html", "오늘의 특가", "index", "bi-lightning-charge")}
-            ${link("recommend.html", "맞춤 추천", "recommend", "bi-stars")}
-            ${link("mypage.html", "마이페이지", "mypage", "bi-heart")}
-            ${user && user.role === "ADMIN" ? link("admin.html", "수집 모니터링", "admin", "bi-speedometer2") : ""}
+            ${link("index.html", "오늘의 특가", "index", "fa-bolt")}
+            ${link("recommend.html", "맞춤 추천", "recommend", "fa-wand-magic-sparkles")}
+            ${link("mypage.html", "마이페이지", "mypage", "fa-heart")}
+            ${user && user.role === "ADMIN" ? link("admin.html", "수집 모니터링", "admin", "fa-chart-line") : ""}
           </ul>
           <ul class="navbar-nav align-items-lg-center">${right}</ul>
         </div>
@@ -103,16 +104,20 @@ NP.renderLayout = (active) => {
     </nav>`);
 
   document.body.insertAdjacentHTML("beforeend", `
-    <footer class="np-footer mt-5">
+    <footer class="np-footer">
       <div class="container">
+        <div class="np-footer-intro">
+          <p>여러 여행사의 특가를 모아,<br><strong>내 취향에 맞는 여행으로.</strong></p>
+          <a href="index.html" class="np-footer-home">오늘의 특가 둘러보기<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+        </div>
         <div class="np-footer-top">
           <div class="np-footer-brand">
-            <a class="np-footer-logo np-display" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
+            <a class="np-footer-logo" href="index.html" aria-label="NomadPick 홈">${NP.brand()}</a>
             <p>RPA 기반 개인 맞춤형 여행상품 추천 서비스.<br>여러 여행사의 특가를 30분마다 모아 내 취향에 맞게 골라 드립니다.</p>
             <div class="np-footer-social">
-              <a href="https://github.com/fsclass-n/nomadpick" target="_blank" rel="noopener" aria-label="GitHub"><i class="bi bi-github"></i></a>
-              <a href="https://fsclass-n.github.io/nomadpick/" target="_blank" rel="noopener" aria-label="프로젝트 소개"><i class="bi bi-play-circle"></i></a>
-              <a href="https://nomadpick.onrender.com/docs" target="_blank" rel="noopener" aria-label="API 문서"><i class="bi bi-code-slash"></i></a>
+              <a href="https://github.com/fsclass-n/nomadpick" target="_blank" rel="noopener" aria-label="GitHub (새 창)"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
+              <a href="https://fsclass-n.github.io/nomadpick/" target="_blank" rel="noopener" aria-label="프로젝트 소개 (새 창)"><i class="fa-solid fa-play" aria-hidden="true"></i></a>
+              <a href="https://nomadpick.onrender.com/docs" target="_blank" rel="noopener" aria-label="API 문서 (새 창)"><i class="fa-solid fa-code" aria-hidden="true"></i></a>
             </div>
           </div>
           <div class="np-footer-col"><h6>서비스</h6>
@@ -125,9 +130,9 @@ NP.renderLayout = (active) => {
             <a href="https://github.com/fsclass-n/nomadpick" target="_blank" rel="noopener">GitHub</a>
             <a href="https://nomadpick.onrender.com/docs" target="_blank" rel="noopener">API 문서</a></div>
           <div class="np-footer-col np-footer-info"><h6>데이터 안내</h6>
-            <p><i class="bi bi-robot"></i> 특가 30분 주기 자동 수집</p>
-            <p><i class="bi bi-airplane"></i> 국내선 운항정보: 국토교통부(TAGO)</p>
-            <p><i class="bi bi-shield-check"></i> 예약·결제는 각 여행사에서 진행</p></div>
+            <p><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> 특가 30분 주기 자동 수집</p>
+            <p><i class="fa-solid fa-plane" aria-hidden="true"></i> 국내선 운항정보: 국토교통부(TAGO)</p>
+            <p><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> 예약·결제는 각 여행사에서 진행</p></div>
         </div>
         <div class="np-footer-bottom">
           <span>© 2026 NomadPick · Semi-Project 3조 (김길동 · 박미금 · 이오리 · 홍기흥)</span>
@@ -137,13 +142,17 @@ NP.renderLayout = (active) => {
     </footer>
     <button type="button" class="np-totop" id="npTop" aria-label="맨 위로 이동">
       <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/></svg>
-      <i class="bi bi-arrow-up"></i><span>TOP</span>
+      <i class="fa-solid fa-arrow-up" aria-hidden="true"></i><span>TOP</span>
     </button>`);
 
+  const main = document.querySelector("main");
+  if (main) { main.id = "mainContent"; main.tabIndex = -1; }
   document.querySelectorAll("#np-logout, #np-drawer-logout").forEach((b) => b.addEventListener("click", NP.logout));
   NP.initDrawer();
   NP.initScrollUi();
 };
+
+NP.brand = () => `<img class="np-brand-symbol" src="img/brand-compass.svg" width="40" height="40" alt=""><span class="np-wordmark">Nomad<span>Pick</span><span class="np-brand-dot">.</span></span>`;
 
 /* 스크롤: 헤더 그림자 · 맨 위로 버튼(진행률 링) */
 NP.initScrollUi = () => {
@@ -164,44 +173,44 @@ NP.initScrollUi = () => {
     ticking = false;
   };
   window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-  if (top) top.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  if (top) top.addEventListener("click", () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" }));
   update();
 };
 
 /* 모바일 메뉴: 햄버거(≡ ↔ ✕ 모핑) + 오른쪽에서 슬라이드되는 드로어 */
 NP.drawerHtml = (active, user) => {
   const items = [
-    ["index.html", "index", "bi-lightning-charge-fill", "오늘의 특가", "3개 여행사 특가를 한눈에"],
-    ["recommend.html", "recommend", "bi-stars", "맞춤 추천", "내 취향 Top 10 + 추천 이유"],
-    ["mypage.html", "mypage", "bi-heart-fill", "마이페이지", "관심 상품 · 가격 하락 알림"],
-    ...(user && user.role === "ADMIN" ? [["admin.html", "admin", "bi-speedometer2", "수집 모니터링", "RPA 수집 현황 · 리포트"]] : []),
+    ["index.html", "index", "fa-bolt", "오늘의 특가", "3개 여행사 특가를 한눈에"],
+    ["recommend.html", "recommend", "fa-wand-magic-sparkles", "맞춤 추천", "내 취향 Top 10 + 추천 이유"],
+    ["mypage.html", "mypage", "fa-heart", "마이페이지", "관심 상품 · 가격 하락 알림"],
+    ...(user && user.role === "ADMIN" ? [["admin.html", "admin", "fa-chart-line", "수집 모니터링", "RPA 수집 현황 · 리포트"]] : []),
   ];
   const menu = items.map(([href, key, icon, label, desc], i) => `
-    <li style="--i:${i}"><a class="${active === key ? "active" : ""}" href="${href}">
-      <span class="np-dm-icon"><i class="bi ${icon}"></i></span>
+    <li style="--i:${i}"><a class="${active === key ? "active" : ""}" href="${href}"${active === key ? ' aria-current="page"' : ""}>
+      <span class="np-dm-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span>
       <span class="np-dm-text"><b>${label}</b><small>${desc}</small></span>
-      <i class="bi bi-chevron-right np-dm-arrow"></i></a></li>`).join("");
+      <i class="fa-solid fa-chevron-right np-dm-arrow" aria-hidden="true"></i></a></li>`).join("");
   const head = user
     ? `<div class="np-drawer-user"><span class="np-avatar">${NP.esc((user.name || "?").slice(0, 1))}</span>
          <div><b>${NP.esc(user.name)}님</b><small>${user.role === "ADMIN" ? "관리자" : "반가워요! 오늘의 특가를 확인해 보세요"}</small></div></div>`
     : `<div class="np-drawer-guest"><b>로그인하고 맞춤 추천을 받아보세요</b>
          <div class="d-flex gap-2 mt-3"><a class="btn btn-light flex-fill" href="login.html">로그인</a>
-         <a class="btn btn-warning flex-fill fw-semibold" href="signup.html">회원가입</a></div></div>`;
+         <a class="btn btn-primary flex-fill fw-semibold" href="signup.html">회원가입</a></div></div>`;
   const sub = user
     ? `<ul class="np-drawer-sub" style="--i:${items.length}">
-         <li><a href="preferences.html"><i class="bi bi-sliders"></i>선호 설정</a></li>
-         <li><button type="button" id="np-drawer-logout"><i class="bi bi-box-arrow-right"></i>로그아웃</button></li></ul>`
+         <li><a href="preferences.html"><i class="fa-solid fa-sliders" aria-hidden="true"></i>선호 설정</a></li>
+         <li><button type="button" id="np-drawer-logout"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>로그아웃</button></li></ul>`
     : "";
   return `
     <div class="np-drawer-backdrop" id="npBackdrop"></div>
-    <aside class="np-drawer" id="npDrawer" aria-hidden="true" aria-label="전체 메뉴">
+    <aside class="np-drawer" id="npDrawer" aria-hidden="true" aria-label="전체 메뉴" inert>
       <div class="np-drawer-top">
-        <a class="np-drawer-brand np-display" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
+        <a class="np-drawer-brand" href="index.html" aria-label="NomadPick 홈">${NP.brand()}</a>
         ${head}
       </div>
       <ul class="np-drawer-menu">${menu}</ul>
       ${sub}
-      <div class="np-drawer-foot"><i class="bi bi-robot me-1"></i>RPA가 30분마다 특가를 업데이트합니다</div>
+      <div class="np-drawer-foot"><span class="np-live-dot"></span>RPA가 30분마다 특가를 업데이트합니다</div>
     </aside>`;
 };
 
@@ -211,16 +220,29 @@ NP.initDrawer = () => {
   const backdrop = document.getElementById("npBackdrop");
   if (!burger || !drawer) return;
   const root = document.documentElement;
+  const background = [...document.querySelectorAll("main, footer, #npNav, .navbar-brand, #npTop")];
   const set = (open) => {
+    if (!open && drawer.contains(document.activeElement)) burger.focus();
     root.classList.toggle("np-menu-open", open);
     burger.setAttribute("aria-expanded", String(open));
     burger.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
     drawer.setAttribute("aria-hidden", String(!open));
+    drawer.inert = !open;
+    background.forEach((el) => { el.inert = open; });
   };
   burger.addEventListener("click", () => set(!root.classList.contains("np-menu-open")));
   backdrop.addEventListener("click", () => set(false));
   drawer.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => set(false)));
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") set(false); });
+  document.addEventListener("keydown", (e) => {
+    if (!root.classList.contains("np-menu-open")) return;
+    if (e.key === "Escape") { set(false); burger.focus(); }
+    if (e.key === "Tab") {
+      const focusable = [burger, ...drawer.querySelectorAll("a[href], button:not(:disabled)")];
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
   window.matchMedia("(min-width: 992px)").addEventListener("change", (e) => { if (e.matches) set(false); });
 };
 
@@ -248,11 +270,11 @@ NP.productCard = (p, { favorite = false } = {}) => `
     <div class="card np-card">
       <a href="product.html?id=${p.id}" class="text-reset">
         <div class="${NP.thumbClass(p)}">
-          ${NP.thumbImg(p)}<i class="bi bi-airplane"></i>
+          ${NP.thumbImg(p)}<i class="fa-solid fa-plane np-thumb-plane" aria-hidden="true"></i>
           <div><div class="np-region">${NP.esc(p.region)} · ${p.nights ?? "-"}박 ${p.days ?? "-"}일</div><div class="np-city">${NP.esc(p.city || p.region)}</div></div>
         </div>
       </a>
-      ${favorite ? `<button class="np-fav" data-fav="${p.id}" title="관심 상품"><i class="bi bi-heart"></i></button>` : ""}
+      ${favorite ? `<button class="np-fav" data-fav="${p.id}" aria-label="${NP.esc(p.title)} 관심 상품 등록" title="관심 상품"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>` : ""}
       <div class="card-body d-flex flex-column">
         <div class="d-flex gap-1 mb-2 flex-wrap">
           ${p.discount_rate > 0 ? `<span class="badge np-badge-discount">-${Math.round(p.discount_rate)}%</span>` : ""}
@@ -261,7 +283,7 @@ NP.productCard = (p, { favorite = false } = {}) => `
           ${NP.sourceBadge(p)}
         </div>
         <a href="product.html?id=${p.id}" class="text-reset np-title mb-2">${NP.esc(p.title)}</a>
-        <div class="small text-secondary mb-2"><i class="bi bi-calendar-event me-1"></i>${NP.depart(p)}
+        <div class="small text-secondary mb-2"><i class="fa-regular fa-calendar me-1" aria-hidden="true"></i>${NP.depart(p)}
           ${NP.seats(p.seats_left)}</div>
         <div class="mt-auto">
           ${p.original_price ? `<div class="np-price-org">${NP.won(p.original_price)}</div>` : ""}
@@ -278,7 +300,7 @@ NP.bindFavoriteButtons = (root) => {
       if (!NP.requireLogin()) return;
       try {
         await NP.api("/favorites", { method: "POST", body: { product_id: +btn.dataset.fav }, auth: true });
-        btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+        btn.innerHTML = '<i class="fa-solid fa-heart" aria-hidden="true"></i>';
         NP.toast("관심 상품에 등록했습니다. 가격이 내려가면 마이페이지에 표시됩니다.");
       } catch (err) {
         NP.toast(err.message, "danger");

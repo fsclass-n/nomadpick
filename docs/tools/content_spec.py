@@ -150,6 +150,14 @@ DELIVERABLES = {
     "02_설계_산출물.hwpx": {
         "images": {"image1": "ERD"},
         "paras": {
+            "Primary #0D6EFD(블루), Accent #FD7E14(특가 배지), Background #F8F9FA":
+                "Primary #087F70(딥그린), Accent #C95B32(코랄), Background #FAF9F6(아이보리)",
+            "Pretendard 15px(본문) / 22px(제목)":
+                "본문 Spoqa Han Sans Neo / 제목 Noto Sans KR / 아이콘 Font Awesome Free 6.7.2",
+            "Bootstrap 5 그리드(col-12 col-md-6 col-lg-3), 카드 영역 Flexbox gap":
+                "Bootstrap 5·Flexbox 상품 카드, 사진 중심 메인, 로그인·회원가입 전체 화면 분할",
+            "992px 이상 4열, 768px 이상 2열, 그 미만 1열":
+                "992px 이상 4열, 576px 이상 2열, 그 미만 1열 / 모바일 메뉴 오른쪽 슬라이드",
             "최근 수집에서 노출 여부": "최근 수집 노출 여부 (수집 소스 source: live / sample, 출발 기간 마지막 날 depart_end 별도 저장)",
             "travel_advisories": "airports",
             "country_code, country_name, level(1~4), updated_at": "airport_id, airport_nm, city, updated_at",

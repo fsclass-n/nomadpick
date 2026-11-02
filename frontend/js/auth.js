@@ -4,6 +4,18 @@ NP.renderLayout("");
 const errorBox = document.getElementById("error");
 const submitBtn = document.getElementById("submitBtn");
 
+document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+  const field = document.getElementById(button.dataset.passwordToggle);
+  const label = button.getAttribute("aria-label").replace(" 표시", "");
+  button.addEventListener("click", () => {
+    const visible = field.type === "password";
+    field.type = visible ? "text" : "password";
+    button.setAttribute("aria-pressed", String(visible));
+    button.setAttribute("aria-label", `${label} ${visible ? "숨기기" : "표시"}`);
+    button.innerHTML = `<i class="fa-regular fa-eye${visible ? "-slash" : ""}" aria-hidden="true"></i>`;
+  });
+});
+
 function showError(msg) {
   errorBox.textContent = msg;
   errorBox.classList.remove("d-none");

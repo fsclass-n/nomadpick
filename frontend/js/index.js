@@ -54,7 +54,7 @@ async function load(append = false) {
   const data = await NP.publicGet("/products", p, () => NP.sample.products(p));
   if (!append) cards.innerHTML = "";
   if (!data.items.length && !append) {
-    cards.innerHTML = '<div class="w-100 text-center text-secondary py-5"><i class="bi bi-search fs-1 d-block mb-2"></i>조건에 맞는 특가가 없습니다. 필터를 조정해 보세요.</div>';
+    cards.innerHTML = '<div class="w-100 text-center text-secondary py-5"><i class="fa-solid fa-magnifying-glass fs-1 d-block mb-3" aria-hidden="true"></i>조건에 맞는 특가가 없습니다. 필터를 조정해 보세요.</div>';
   }
   cards.insertAdjacentHTML("beforeend", data.items.map((x) => NP.productCard(x, { favorite: true })).join(""));
   NP.bindFavoriteButtons(cards);
