@@ -85,7 +85,8 @@ NP.renderLayout = (active) => {
     <nav class="navbar navbar-expand-lg np-navbar sticky-top">
       <div class="container">
         <a class="navbar-brand np-brand" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#npNav"><span class="navbar-toggler-icon"></span></button>
+        <button class="np-burger d-lg-none" id="npBurger" type="button" aria-label="메뉴 열기" aria-controls="npDrawer" aria-expanded="false">
+          <span></span><span></span><span></span></button>
         <div class="collapse navbar-collapse" id="npNav">
           <ul class="navbar-nav me-auto">
             ${link("index.html", "오늘의 특가", "index", "bi-lightning-charge")}
@@ -96,6 +97,7 @@ NP.renderLayout = (active) => {
           <ul class="navbar-nav align-items-lg-center">${right}</ul>
         </div>
       </div>
+      ${NP.drawerHtml(active, user)}
     </nav>`);
 
   document.body.insertAdjacentHTML("beforeend", `
@@ -104,8 +106,64 @@ NP.renderLayout = (active) => {
       <div>상품 정보는 각 여행사 공개 특가 페이지 기준이며, 예약은 원 여행사에서 진행됩니다. 국내선 운항정보: 국토교통부(TAGO)</div>
     </div></footer>`);
 
-  const btn = document.getElementById("np-logout");
-  if (btn) btn.addEventListener("click", NP.logout);
+  document.querySelectorAll("#np-logout, #np-drawer-logout").forEach((b) => b.addEventListener("click", NP.logout));
+  NP.initDrawer();
+};
+
+/* 모바일 메뉴: 햄버거(≡ ↔ ✕ 모핑) + 오른쪽에서 슬라이드되는 드로어 */
+NP.drawerHtml = (active, user) => {
+  const items = [
+    ["index.html", "index", "bi-lightning-charge-fill", "오늘의 특가", "3개 여행사 특가를 한눈에"],
+    ["recommend.html", "recommend", "bi-stars", "맞춤 추천", "내 취향 Top 10 + 추천 이유"],
+    ["mypage.html", "mypage", "bi-heart-fill", "마이페이지", "관심 상품 · 가격 하락 알림"],
+    ...(user && user.role === "ADMIN" ? [["admin.html", "admin", "bi-speedometer2", "수집 모니터링", "RPA 수집 현황 · 리포트"]] : []),
+  ];
+  const menu = items.map(([href, key, icon, label, desc], i) => `
+    <li style="--i:${i}"><a class="${active === key ? "active" : ""}" href="${href}">
+      <span class="np-dm-icon"><i class="bi ${icon}"></i></span>
+      <span class="np-dm-text"><b>${label}</b><small>${desc}</small></span>
+      <i class="bi bi-chevron-right np-dm-arrow"></i></a></li>`).join("");
+  const head = user
+    ? `<div class="np-drawer-user"><span class="np-avatar">${NP.esc((user.name || "?").slice(0, 1))}</span>
+         <div><b>${NP.esc(user.name)}님</b><small>${user.role === "ADMIN" ? "관리자" : "반가워요! 오늘의 특가를 확인해 보세요"}</small></div></div>`
+    : `<div class="np-drawer-guest"><b>로그인하고 맞춤 추천을 받아보세요</b>
+         <div class="d-flex gap-2 mt-3"><a class="btn btn-light flex-fill" href="login.html">로그인</a>
+         <a class="btn btn-warning flex-fill fw-semibold" href="signup.html">회원가입</a></div></div>`;
+  const sub = user
+    ? `<ul class="np-drawer-sub" style="--i:${items.length}">
+         <li><a href="preferences.html"><i class="bi bi-sliders"></i>선호 설정</a></li>
+         <li><button type="button" id="np-drawer-logout"><i class="bi bi-box-arrow-right"></i>로그아웃</button></li></ul>`
+    : "";
+  return `
+    <div class="np-drawer-backdrop" id="npBackdrop"></div>
+    <aside class="np-drawer" id="npDrawer" aria-hidden="true" aria-label="전체 메뉴">
+      <div class="np-drawer-top">
+        <a class="np-drawer-brand" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
+        ${head}
+      </div>
+      <ul class="np-drawer-menu">${menu}</ul>
+      ${sub}
+      <div class="np-drawer-foot"><i class="bi bi-robot me-1"></i>RPA가 30분마다 특가를 업데이트합니다</div>
+    </aside>`;
+};
+
+NP.initDrawer = () => {
+  const burger = document.getElementById("npBurger");
+  const drawer = document.getElementById("npDrawer");
+  const backdrop = document.getElementById("npBackdrop");
+  if (!burger || !drawer) return;
+  const root = document.documentElement;
+  const set = (open) => {
+    root.classList.toggle("np-menu-open", open);
+    burger.setAttribute("aria-expanded", String(open));
+    burger.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+    drawer.setAttribute("aria-hidden", String(!open));
+  };
+  burger.addEventListener("click", () => set(!root.classList.contains("np-menu-open")));
+  backdrop.addEventListener("click", () => set(false));
+  drawer.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => set(false)));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") set(false); });
+  window.matchMedia("(min-width: 992px)").addEventListener("change", (e) => { if (e.matches) set(false); });
 };
 
 NP.showOfflineBanner = () => {
