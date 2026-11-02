@@ -8,9 +8,10 @@ from fastapi.responses import HTMLResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from ..config import settings
 from ..constants import AGENCIES
 from ..database import get_db
-from ..models import ExcelReport, RpaJobLog
+from ..models import ExcelReport, RpaJobLog, User
 from ..security import api_error, get_admin
 from ..utils import today_kst
 
@@ -89,7 +90,10 @@ def get_report(report_date: date, format: str = Query("xlsx", pattern="^(xlsx|ht
 
 
 @router.post("/rpa/run", status_code=status.HTTP_202_ACCEPTED, summary="RPA 수동 실행")
-def run_rpa(background: BackgroundTasks, job: str = Query("deals", pattern="^(deals|public|report|all)$")):
+def run_rpa(background: BackgroundTasks, job: str = Query("deals", pattern="^(deals|public|report|all)$"),
+            user: User = Depends(get_admin)):
+    if user.email == settings.demo_admin_email:
+        raise api_error(status.HTTP_403_FORBIDDEN, "DEMO_READ_ONLY", "체험 관리자 계정은 조회만 가능합니다. (수집 실행 불가)")
     from rpa.run import run_job_isolated  # 지연 import (RPA 의존성)
 
     background.add_task(run_job_isolated, job)

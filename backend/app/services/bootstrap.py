@@ -28,6 +28,20 @@ def seed_reference_data(db: Session) -> None:
     db.commit()
 
 
+def ensure_demo_account(db: Session, role: str) -> User:
+    """로그인 화면 체험 버튼용 계정. 일반: DEMO_EMAIL(기본 선호 포함) / 관리자: DEMO_ADMIN_EMAIL(읽기 전용 관리자)."""
+    import secrets
+
+    email, name = (settings.demo_admin_email, "체험 관리자") if role == "ADMIN" else (settings.demo_email, "데모 사용자")
+    user = _ensure_user(db, email, settings.demo_password if role == "USER" and settings.demo_password else secrets.token_urlsafe(24), name, role)
+    if role == "USER" and user.preference is None:
+        db.add(UserPreference(user_id=user.id, regions=["동남아", "일본"], budget_min=300000, budget_max=1000000,
+                              depart_months=[], nights_min=2, nights_max=4, theme="휴양", companion="친구"))
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def _ensure_user(db: Session, email: str, password: str, name: str, role: str) -> User | None:
     if not email or not password:
         return None

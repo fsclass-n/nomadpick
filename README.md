@@ -196,7 +196,8 @@ score = cosine(user_vector, product_vector) × 60      # 지역 · 테마 · 기
 
 | 그룹 | 엔드포인트 | 권한 |
 |---|---|---|
-| Auth | `POST /auth/signup` · `POST /auth/login` · `GET /users/me` | 공개 / 회원 |
+| Auth | `POST /auth/signup` · `POST /auth/login` · `POST /auth/demo-login` · `GET /users/me` | 공개 / 회원 |
+| SNS Login | `GET /auth/oauth/providers` · `GET /auth/oauth/{google\|naver\|kakao}/start` · `GET /auth/oauth/{provider}/callback` | 공개 (OAuth 2.0) |
 | Products | `GET /meta` · `GET /products` · `GET /products/{id}` · `GET /products/{id}/prices` | 공개 |
 | Preferences | `GET /preferences` · `PUT /preferences` | 회원 |
 | Recommendations | `GET /recommendations` · `GET /recommendations/excel` | 회원 |

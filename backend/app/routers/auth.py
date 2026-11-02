@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..database import get_db
 from ..models import User
-from ..schemas import LoginIn, SignupIn, TokenOut, UserOut
+from ..schemas import DemoLoginIn, LoginIn, SignupIn, TokenOut, UserOut
 from ..security import api_error, create_token, get_current_user, hash_password, verify_password
 
 router = APIRouter(tags=["인증·회원"])
@@ -33,6 +33,15 @@ def login(body: LoginIn, db: Session = Depends(get_db)):
     if user is None or not verify_password(body.password, user.password_hash):
         raise api_error(status.HTTP_401_UNAUTHORIZED, "INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다.")
     return _token_response(user)
+
+
+@router.post("/auth/demo-login", response_model=TokenOut, summary="체험 계정 로그인 (일반 / 읽기 전용 관리자)")
+def demo_login(body: DemoLoginIn, db: Session = Depends(get_db)):
+    if not settings.demo_login_enabled:
+        raise api_error(status.HTTP_403_FORBIDDEN, "DEMO_DISABLED", "체험 로그인이 비활성화되어 있습니다.")
+    from ..services.bootstrap import ensure_demo_account
+
+    return _token_response(ensure_demo_account(db, body.role))
 
 
 @router.get("/users/me", response_model=UserOut, summary="내 정보")

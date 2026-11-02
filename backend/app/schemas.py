@@ -1,6 +1,7 @@
 """요청/응답 스키마 (Pydantic v2)."""
 import re
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -146,3 +147,7 @@ class RpaReportIn(BaseModel):
     file_base64: str
     chart_html: str | None = None
     summary: dict | None = None
+
+
+class DemoLoginIn(BaseModel):
+    role: Literal["USER", "ADMIN"] = "USER"

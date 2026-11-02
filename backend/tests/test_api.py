@@ -196,3 +196,26 @@ def test_isolated_rpa_job_is_killed_on_timeout(monkeypatch):
     out = rpa_run.run_job_isolated("report")
     assert "시간 초과" in out["killed"]
     assert not rpa_run._lock.locked()
+
+
+def test_demo_login_user_and_read_only_admin(client):
+    r = client.post("/api/v1/auth/demo-login", json={"role": "USER"})
+    assert r.status_code == 200 and r.json()["user"]["role"] == "USER" and r.json()["has_preference"]
+    r = client.post("/api/v1/auth/demo-login", json={"role": "ADMIN"})
+    assert r.status_code == 200 and r.json()["user"]["role"] == "ADMIN"
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.get("/api/v1/admin/rpa-logs", headers=h).status_code == 200      # 조회 가능
+    r = client.post("/api/v1/admin/rpa/run", params={"job": "report"}, headers=h)    # 실행 불가
+    assert r.status_code == 403 and r.json()["code"] == "DEMO_READ_ONLY"
+
+
+def test_oauth_providers_and_unconfigured_start(client):
+    on = client.get("/api/v1/auth/oauth/providers").json()
+    assert set(on) == {"google", "naver", "kakao"}
+    r = client.get("/api/v1/auth/oauth/naver/start", params={"return_to": "https://evil.example.com/x"}, follow_redirects=False)
+    assert r.status_code == 302
+    loc = r.headers["location"]
+    assert not loc.startswith("https://evil.example.com")                           # 오픈 리다이렉트 차단
+    if not on["naver"]:
+        assert "oauth_error=" in loc
+    assert client.get("/api/v1/auth/oauth/unknown/start", follow_redirects=False).status_code == 404

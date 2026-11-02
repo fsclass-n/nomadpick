@@ -64,6 +64,15 @@ class Settings:
         self.rpa_agency_timeout_sec = int(os.getenv("RPA_AGENCY_TIMEOUT_SEC", "480"))
         self.rpa_retries = int(os.getenv("RPA_RETRIES", "3"))
         self.enable_scheduler = _bool("ENABLE_SCHEDULER", False)
+        # BOT-01(Chromium 특가 수집) 만 끄기 - Render 무료(512MB·해외 IP)에서는 false, 공공데이터·리포트는 계속 실행
+        self.enable_deals_job = _bool("ENABLE_DEALS_JOB", True)
+        # 로그인 화면 체험 버튼 (일반 데모 계정 · 읽기 전용 데모 관리자)
+        self.demo_login_enabled = _bool("DEMO_LOGIN_ENABLED", True)
+        self.demo_admin_email = os.getenv("DEMO_ADMIN_EMAIL", "demo-admin@nomadpick.example.com").strip().lower()
+        # SNS 로그인 (OAuth 2.0 Authorization Code) - 키가 있는 제공자만 활성화
+        self.public_base_url = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+        self.oauth = {p: (os.getenv(f"{p.upper()}_CLIENT_ID", "").strip(), os.getenv(f"{p.upper()}_CLIENT_SECRET", "").strip())
+                      for p in ("google", "naver", "kakao")}
         self.collect_on_startup = _bool("COLLECT_ON_STARTUP", False)
 
     def require_database_url(self) -> str:

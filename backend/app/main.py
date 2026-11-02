@@ -11,7 +11,7 @@ from sqlalchemy import text
 
 from .config import FRONTEND_DIR, settings
 from .database import SessionLocal, engine, init_db
-from .routers import admin, auth, favorites, preferences, products, recommendations, rpa
+from .routers import admin, auth, favorites, oauth, preferences, products, recommendations, rpa
 from .scheduler import start_scheduler, stop_scheduler
 from .services.bootstrap import seed_reference_data
 from .utils import now_kst
@@ -72,7 +72,7 @@ def health():
             "db_ok": db_ok, "env": settings.app_env, "time": now_kst().isoformat()}
 
 
-for r in (auth.router, preferences.router, products.router, recommendations.router, favorites.router, rpa.router, admin.router):
+for r in (auth.router, oauth.router, preferences.router, products.router, recommendations.router, favorites.router, rpa.router, admin.router):
     app.include_router(r, prefix=API_PREFIX)
 
 # 정적 프런트엔드 (Render / EC2 단일 도메인 서비스). Netlify 는 frontend/ 폴더만 별도 배포.

@@ -32,7 +32,10 @@ def start_scheduler() -> None:
     global _scheduler
     if settings.enable_scheduler and _scheduler is None:
         _scheduler = BackgroundScheduler(timezone=settings.timezone)
-        _scheduler.add_job(_run, CronTrigger(minute="0,30", hour="9-21"), args=["deals"], id="BOT-01", max_instances=1, coalesce=True)
+        if settings.enable_deals_job:
+            _scheduler.add_job(_run, CronTrigger(minute="0,30", hour="9-21"), args=["deals"], id="BOT-01", max_instances=1, coalesce=True)
+        else:
+            log.info("BOT-01 특가 수집은 이 서버에서 실행하지 않습니다 (ENABLE_DEALS_JOB=false)")
         _scheduler.add_job(_run, CronTrigger(hour=7, minute=0), args=["public"], id="BOT-02", max_instances=1, coalesce=True)
         _scheduler.add_job(_run, CronTrigger(hour=21, minute=30), args=["report"], id="BOT-03", max_instances=1, coalesce=True)
         _scheduler.start()
