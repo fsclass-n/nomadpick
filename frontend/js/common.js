@@ -64,18 +64,20 @@ NP.download = async (path, fallbackName) => {
 NP.renderLayout = (active) => {
   const user = NP.auth.user();
   const link = (href, label, key, icon) =>
-    `<li class="nav-item"><a class="nav-link ${active === key ? "active" : ""}" href="${href}"><i class="bi ${icon} me-1"></i>${label}</a></li>`;
+    `<li class="nav-item"><a class="nav-link ${active === key ? "active" : ""}" href="${href}"${active === key ? ' aria-current="page"' : ""}><i class="bi ${icon} me-1"></i>${label}</a></li>`;
   const right = user
     ? `<li class="nav-item dropdown">
-         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle me-1"></i>${NP.esc(user.name)}</a>
-         <ul class="dropdown-menu dropdown-menu-end">
+         <a class="nav-link dropdown-toggle np-user-btn" href="#" data-bs-toggle="dropdown">
+           <span class="np-avatar-sm">${NP.esc((user.name || "?").slice(0, 1))}</span>${NP.esc(user.name)}</a>
+         <ul class="dropdown-menu dropdown-menu-end np-user-menu">
+           <li class="px-3 py-2 small text-secondary">${user.role === "ADMIN" ? "관리자 계정" : "반가워요, " + NP.esc(user.name) + "님"}</li>
            <li><a class="dropdown-item" href="preferences.html"><i class="bi bi-sliders me-2"></i>선호 설정</a></li>
            <li><a class="dropdown-item" href="mypage.html"><i class="bi bi-heart me-2"></i>마이페이지</a></li>
            <li><hr class="dropdown-divider"></li>
            <li><button class="dropdown-item" id="np-logout"><i class="bi bi-box-arrow-right me-2"></i>로그아웃</button></li>
          </ul></li>`
-    : `<li class="nav-item"><a class="nav-link" href="login.html">로그인</a></li>
-       <li class="nav-item"><a class="btn btn-primary btn-sm ms-lg-2 mt-1" href="signup.html">회원가입</a></li>`;
+    : `<li class="nav-item"><a class="nav-link np-login-link" href="login.html"><i class="bi bi-person me-1"></i>로그인</a></li>
+       <li class="nav-item"><a class="btn np-signup-btn ms-lg-2" href="signup.html">회원가입</a></li>`;
 
   document.body.insertAdjacentHTML("afterbegin", `
     <div id="np-offline" class="np-offline small py-2 d-none"><div class="container">
@@ -84,11 +86,11 @@ NP.renderLayout = (active) => {
       <a href="#" onclick="location.reload();return false;" class="ms-2">다시 시도</a></div></div>
     <nav class="navbar navbar-expand-lg np-navbar sticky-top">
       <div class="container">
-        <a class="navbar-brand np-brand" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
+        <a class="navbar-brand np-brand" href="index.html"><span class="np-logo-mark"><i class="bi bi-compass-fill"></i></span>NomadPick</a>
         <button class="np-burger d-lg-none" id="npBurger" type="button" aria-label="메뉴 열기" aria-controls="npDrawer" aria-expanded="false">
           <span></span><span></span><span></span></button>
         <div class="collapse navbar-collapse" id="npNav">
-          <ul class="navbar-nav me-auto">
+          <ul class="navbar-nav mx-auto np-main-nav">
             ${link("index.html", "오늘의 특가", "index", "bi-lightning-charge")}
             ${link("recommend.html", "맞춤 추천", "recommend", "bi-stars")}
             ${link("mypage.html", "마이페이지", "mypage", "bi-heart")}
@@ -105,7 +107,7 @@ NP.renderLayout = (active) => {
       <div class="container">
         <div class="np-footer-top">
           <div class="np-footer-brand">
-            <a class="np-footer-logo" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
+            <a class="np-footer-logo np-display" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
             <p>RPA 기반 개인 맞춤형 여행상품 추천 서비스.<br>여러 여행사의 특가를 30분마다 모아 내 취향에 맞게 골라 드립니다.</p>
             <div class="np-footer-social">
               <a href="https://github.com/fsclass-n/nomadpick" target="_blank" rel="noopener" aria-label="GitHub"><i class="bi bi-github"></i></a>
@@ -132,10 +134,38 @@ NP.renderLayout = (active) => {
           <span>상품 정보는 각 여행사 공개 특가 페이지 기준이며, 실제 가격·좌석은 여행사 사이트에서 확인해 주세요.</span>
         </div>
       </div>
-    </footer>`);
+    </footer>
+    <button type="button" class="np-totop" id="npTop" aria-label="맨 위로 이동">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/></svg>
+      <i class="bi bi-arrow-up"></i><span>TOP</span>
+    </button>`);
 
   document.querySelectorAll("#np-logout, #np-drawer-logout").forEach((b) => b.addEventListener("click", NP.logout));
   NP.initDrawer();
+  NP.initScrollUi();
+};
+
+/* 스크롤: 헤더 그림자 · 맨 위로 버튼(진행률 링) */
+NP.initScrollUi = () => {
+  const nav = document.querySelector(".np-navbar");
+  const top = document.getElementById("npTop");
+  const ring = top && top.querySelector("circle");
+  const len = ring ? 2 * Math.PI * 21 : 0;
+  if (ring) ring.style.strokeDasharray = `${len}`;
+  let ticking = false;
+  const update = () => {
+    const y = window.scrollY;
+    const max = document.documentElement.scrollHeight - innerHeight;
+    if (nav) nav.classList.toggle("np-scrolled", y > 8);
+    if (top) {
+      top.classList.toggle("show", y > 400);
+      ring.style.strokeDashoffset = `${len * (1 - (max > 0 ? Math.min(y / max, 1) : 0))}`;
+    }
+    ticking = false;
+  };
+  window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  if (top) top.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  update();
 };
 
 /* 모바일 메뉴: 햄버거(≡ ↔ ✕ 모핑) + 오른쪽에서 슬라이드되는 드로어 */
@@ -166,7 +196,7 @@ NP.drawerHtml = (active, user) => {
     <div class="np-drawer-backdrop" id="npBackdrop"></div>
     <aside class="np-drawer" id="npDrawer" aria-hidden="true" aria-label="전체 메뉴">
       <div class="np-drawer-top">
-        <a class="np-drawer-brand" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
+        <a class="np-drawer-brand np-display" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
         ${head}
       </div>
       <ul class="np-drawer-menu">${menu}</ul>

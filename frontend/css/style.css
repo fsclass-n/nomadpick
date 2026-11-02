@@ -1,5 +1,13 @@
-/* NomadPick - Design guide: Primary #0D6EFD, Accent #FD7E14, Background #F8F9FA, Pretendard 15px/22px */
+/* NomadPick - Design guide: Primary #0D6EFD, Accent #FD7E14, Background #F8F9FA
+   서체: 본문 Spoqa Han Sans Neo(가독성) · 제목 Gmarket Sans(브랜드형 디스플레이) */
+@import url("https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@3.3.0/css/SpoqaHanSansNeo.css");
+@font-face { font-family: "GmarketSans"; font-weight: 500; font-display: swap;
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff") format("woff"); }
+@font-face { font-family: "GmarketSans"; font-weight: 700; font-display: swap;
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff") format("woff"); }
 :root {
+  --np-font-body: "Spoqa Han Sans Neo", "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+  --np-font-display: "GmarketSans", "Spoqa Han Sans Neo", "Malgun Gothic", sans-serif;
   --np-primary: #0d6efd;
   --np-accent: #fd7e14;
   --np-bg: #f8f9fa;
@@ -10,14 +18,16 @@
 
 html, body { height: 100%; }
 body {
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+  font-family: var(--np-font-body);
   font-size: 15px;
+  letter-spacing: -.2px;
   background: var(--np-bg);
   color: var(--np-ink);
   display: flex;
   flex-direction: column;
 }
 main { flex: 1 0 auto; }
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, .np-brand, .np-display { font-family: var(--np-font-display); letter-spacing: -.5px; }
 h1, .h1 { font-size: 26px; font-weight: 700; }
 h2, .h2 { font-size: 22px; font-weight: 700; }
 h3, .h3 { font-size: 18px; font-weight: 700; }
@@ -274,4 +284,80 @@ a { text-decoration: none; }
   .np-section-head { align-items: flex-start; }
   .np-section-head h2 { font-size: 1.45rem; }
   .np-section-head .btn { padding: .3rem .75rem; font-size: .82rem; }
+}
+
+/* ===== 헤더: 상용 플랫폼형 (반투명 블러 · 밑줄 인디케이터 · 스크롤 그림자) ===== */
+.np-navbar { min-height: 72px; background: rgba(255, 255, 255, .86); backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px); box-shadow: 0 1px 0 rgba(15, 23, 42, .06); transition: box-shadow .3s, min-height .3s, background .3s; }
+.np-navbar.np-scrolled { min-height: 62px; background: rgba(255, 255, 255, .95); box-shadow: 0 8px 28px rgba(15, 23, 42, .08); }
+.np-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 700; color: #0f172a !important; }
+.np-logo-mark { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-size: 1.05rem;
+  background: linear-gradient(135deg, #fd7e14 0%, #ff922b 40%, #228be6 100%); box-shadow: 0 6px 16px rgba(253, 126, 20, .3); transition: transform .4s; }
+.np-brand:hover .np-logo-mark { transform: rotate(-20deg) scale(1.06); }
+.np-brand .np-logo-mark .bi { color: #fff; }
+.np-main-nav { gap: 6px; }
+.np-main-nav .nav-link { position: relative; padding: 10px 14px !important; border-radius: 10px; color: #475569; font-weight: 600; transition: color .2s, background .2s; }
+.np-main-nav .nav-link::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 2px; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--np-primary), #3bc9db); transform: scaleX(0); transform-origin: center; transition: transform .3s cubic-bezier(.22, 1, .36, 1); }
+.np-main-nav .nav-link:hover { color: var(--np-primary); background: #f1f5ff; }
+.np-main-nav .nav-link:hover::after, .np-main-nav .nav-link.active::after { transform: scaleX(1); }
+.np-navbar .np-main-nav .nav-link.active { color: var(--np-primary) !important; font-weight: 700; }
+.np-login-link { color: #475569 !important; font-weight: 600; }
+.np-signup-btn { padding: 8px 18px; border-radius: 999px; color: #fff !important; font-weight: 700; border: 0;
+  background: linear-gradient(135deg, #0d6efd, #3b82f6); box-shadow: 0 6px 16px rgba(13, 110, 253, .28); transition: transform .2s, box-shadow .2s; }
+.np-signup-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(13, 110, 253, .35); }
+.np-user-btn { display: inline-flex !important; align-items: center; gap: 8px; font-weight: 600; color: #334155 !important; }
+.np-avatar-sm { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: .85rem; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, #228be6, #15aabf); }
+.np-user-menu { border: 0; border-radius: 14px; padding: 6px; box-shadow: 0 16px 40px rgba(15, 23, 42, .14); min-width: 200px; }
+.np-user-menu .dropdown-item { border-radius: 10px; padding: 9px 12px; }
+.np-login-body .np-login { min-height: calc(100vh - 72px); }
+
+/* ===== 맨 위로 버튼 (스크롤 진행률 링 · 등장 애니메이션) ===== */
+.np-totop { position: fixed; right: 22px; bottom: 24px; z-index: 1010; width: 56px; height: 56px; border: 0; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; color: #fff; cursor: pointer;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a); box-shadow: 0 12px 28px rgba(15, 23, 42, .3);
+  opacity: 0; visibility: hidden; transform: translateY(24px) scale(.8);
+  transition: opacity .35s, visibility .35s, transform .45s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s; }
+.np-totop.show { opacity: 1; visibility: visible; transform: none; }
+.np-totop:hover { box-shadow: 0 16px 34px rgba(30, 58, 138, .45); }
+.np-totop svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.np-totop circle { fill: none; stroke: #ffd43b; stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset .15s linear; }
+.np-totop i { font-size: 1.05rem; line-height: 1; }
+.np-totop span { font-family: var(--np-font-display); font-size: .58rem; letter-spacing: 1px; margin-top: 1px; }
+.np-totop:hover i { animation: np-up .7s ease-in-out infinite; }
+@keyframes np-up { 50% { transform: translateY(-4px); } }
+.np-menu-open .np-totop { opacity: 0; visibility: hidden; }
+
+/* ===== 메인 상단 콘텐츠 가운데 정렬 ===== */
+.np-home-hero { padding: 96px 0 132px; text-align: center; }
+.np-home-hero::before { background: radial-gradient(ellipse at center, rgba(5, 22, 45, .55) 0%, rgba(5, 22, 45, .72) 55%, rgba(5, 22, 45, .88) 100%); }
+.np-home-hero h1 { font-weight: 700; }
+.np-hero-lead { margin-left: auto; margin-right: auto; }
+.np-hero-search { margin: 0 auto; text-align: left; max-width: 680px; }
+.np-hero-tags, .np-hero-stats { justify-content: center; }
+
+/* ===== 오늘의 특가 제목 (가운데 · 강조 · 여백) ===== */
+.np-section-head { display: block; text-align: center; margin: 0; padding: 76px 0 40px; }
+.np-section-head .np-eyebrow { font-family: var(--np-font-display); font-size: .8rem; letter-spacing: 4px; }
+.np-section-head h2 { font-size: clamp(2rem, 3.6vw, 2.75rem); font-weight: 700; margin: 10px 0 12px; }
+.np-section-head h2 em { font-style: normal; color: var(--np-primary); position: relative; }
+.np-section-head h2 em::after { content: ""; position: absolute; left: -2px; right: -2px; bottom: 2px; height: 12px; z-index: -1; border-radius: 4px;
+  background: rgba(255, 212, 59, .55); }
+.np-section-sub { color: #64748b; font-size: 1.02rem; margin: 0 auto 18px; }
+.np-section-meta { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* ===== 더 보기 · CTA · 푸터 여백 ===== */
+.np-more { text-align: center; padding: 48px 0 32px; }
+.np-more .btn { padding-top: 12px; padding-bottom: 12px; font-weight: 600; }
+.np-why { margin: 40px 0 40px; }
+.np-cta { margin-bottom: 96px; }
+.np-cta h3 { font-size: 1.6rem; }
+@media (max-width: 991.98px) {
+  .np-navbar { min-height: 62px; }
+  .np-home-hero { padding: 56px 0 72px; }
+  .np-section-head { padding: 52px 0 28px; }
+  .np-more { padding: 36px 0 20px; }
+  .np-cta { margin-bottom: 64px; text-align: center; justify-content: center; }
+  .np-totop { right: 16px; bottom: 18px; width: 50px; height: 50px; }
 }
