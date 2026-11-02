@@ -205,6 +205,45 @@ def test_auto_mode_keeps_live_data_when_live_fails(client):
     assert found and found[0]["source"] == "live"
 
 
+def test_accumulate_with_retention_and_keep_missing_values(client):
+    """누적 방식: 수집에서 빠진 상품은 72시간 유지, 그 이후·출발 기간 종료 시 숨김. 빈 값은 기존 값을 지우지 않음."""
+    sink, now = DirectSink(), now_kst()
+    future, past = (now + timedelta(days=30)).date(), (now - timedelta(days=1)).date()
+
+    def item(code, title, image=None, depart=future):
+        return {"product_code": code, "title": title, "region": "일본", "city": "오사카", "depart_date": depart,
+                "nights": 2, "days": 3, "price": 499000, "image_url": image}
+
+    sink.products_bulk("modetour", now - timedelta(hours=80), "live", [item("RET-OLD", "보관테스트 오래됨")])
+    sink.products_bulk("modetour", now - timedelta(hours=10), "live",
+                       [item("RET-MISS", "보관테스트 빠짐"), item("RET-IMG", "보관테스트 이미지", "https://img/real.jpg")])
+    sink.products_bulk("modetour", now, "live", [item("RET-IMG", "보관테스트 이미지", None), item("RET-PAST", "보관테스트 지난출발", depart=past)])
+
+    titles = {i["title"]: i for i in client.get("/api/v1/products", params={"q": "보관테스트", "size": 50}).json()["items"]}
+    assert "보관테스트 빠짐" in titles             # 이번 수집에 없지만 10시간 전 확인 → 유지
+    assert "보관테스트 오래됨" not in titles       # 80시간 전 확인 → 숨김
+    assert "보관테스트 지난출발" not in titles     # 출발 기간 종료 → 즉시 숨김
+    assert titles["보관테스트 이미지"]["image_url"] == "https://img/real.jpg"  # 다른 엔진의 빈 값이 실제 이미지를 지우지 않음
+    assert titles["보관테스트 빠짐"]["last_seen_at"] < titles["보관테스트 이미지"]["last_seen_at"]
+
+
+def test_fallback_server_only_fills_gaps(client):
+    """fallback(Render) 은 최근 25분 안에 live 수집 성공이 없는 여행사만 대신 수집한다."""
+    from backend.app.scheduler import fallback_targets
+
+    sink, now = DirectSink(), now_kst()
+    log = lambda code, minutes: sink.log({"job_name": "BOT-01", "agency_code": code, "status": "SUCCESS", "source": "live",  # noqa: E731
+                                          "collected": 10, "failed": 0, "message": "[ec2·Playwright] 테스트",
+                                          "started_at": now - timedelta(minutes=minutes), "ended_at": now})
+    log("hanatour", 14)   # primary 가 15분 전 수집 → 건너뜀
+    log("ybtour", 31)     # 30분 전(자기 직전 실행 등) → 오래됨 → 대신 수집
+    targets = fallback_targets("deals")
+    assert "hanatour" not in targets and {"ybtour", "modetour"} <= set(targets)
+    log("ybtour", 5)
+    log("modetour", 5)
+    assert fallback_targets("deals") is None
+
+
 def test_admin_role_management(client):
     admin = login(client, "admin@test.com", "Admin!2026")
     r = client.post("/api/v1/auth/signup", json={"email": "promote@test.com", "password": "Trip#2026go", "name": "승격대상"})

@@ -34,7 +34,7 @@ _lock = threading.Lock()
 PARSE_FAIL_THRESHOLD = 20.0  # 파싱 실패율 20% 초과 시 경고
 
 
-async def _collect_live_async() -> dict | None:
+async def _collect_live_async(agencies: list[str] | None = None) -> dict | None:
     """Playwright(Async) 브라우저 1개로 여행사 3곳을 차례로 수집. 여행사마다 컨텍스트를 열고 닫으며, 브라우저는 반드시 종료."""
     try:
         browser = await HumanBrowser().__aenter__()
@@ -43,7 +43,7 @@ async def _collect_live_async() -> dict | None:
         return None
     results = {}
     try:
-        for cls in COLLECTORS:
+        for cls in _collectors(agencies):
             collector = cls()
             try:  # 여행사 1곳이 응답 없이 멈춰도 전체 작업이 끝나도록 시간 제한
                 results[collector.agency] = await asyncio.wait_for(collector.collect_live(browser), settings.rpa_agency_timeout_sec)
@@ -61,12 +61,22 @@ async def _collect_live_async() -> dict | None:
     return results
 
 
-def _collect_http_all() -> dict:
+def _collectors(agencies: list[str] | None = None) -> list:
+    return [c for c in COLLECTORS if not agencies or c.agency in agencies]
+
+
+def engine_tag() -> str:
+    """수집 로그에 남기는 실행 서버·엔진 표시 (예: '[ec2·Playwright]', '[render·HTTP]')."""
+    engine = "Playwright" if settings.rpa_engine == "browser" else "HTTP"
+    return f"[{settings.rpa_node}·{engine}]" if settings.rpa_node else f"[{engine}]"
+
+
+def _collect_http_all(agencies: list[str] | None = None) -> dict:
     """경량 HTTP 엔진: 브라우저 없이 3곳을 차례로 수집 (Render 무료 512MB 에서도 수십 MB)."""
     from .collector.base import CollectResult
 
     results = {}
-    for cls in COLLECTORS:
+    for cls in _collectors(agencies):
         collector = cls()
         try:
             results[collector.agency] = collector.collect_http()
@@ -77,33 +87,35 @@ def _collect_http_all() -> dict:
     return results
 
 
-def collect_live_all(mode: str) -> dict | None:
+def collect_live_all(mode: str, agencies: list[str] | None = None) -> dict | None:
     """동기 코드(스케줄러 스레드·BackgroundTasks)에서 호출. 이미 이벤트 루프가 도는 스레드라면 별도 스레드에서 실행."""
     if mode not in ("live", "auto"):
         return None
     if settings.rpa_engine != "browser":
-        return _collect_http_all()
+        return _collect_http_all(agencies)
     try:
         asyncio.get_running_loop()
     except RuntimeError:
-        return asyncio.run(_collect_live_async())
+        return asyncio.run(_collect_live_async(agencies))
     box = {}
-    t = threading.Thread(target=lambda: box.update(r=asyncio.run(_collect_live_async())))
+    t = threading.Thread(target=lambda: box.update(r=asyncio.run(_collect_live_async(agencies))))
     t.start()
     t.join()
     return box.get("r")
 
 
-def run_deals(sink, mode: str | None = None, at: datetime | None = None, write_log: bool = True) -> dict:
-    """BOT-01: 여행사 3곳 특가 수집(Playwright Async) → pandas 정제 → upsert + 가격 스냅샷 → 로그."""
+def run_deals(sink, mode: str | None = None, at: datetime | None = None, write_log: bool = True,
+              agencies: list[str] | None = None) -> dict:
+    """BOT-01: 여행사 특가 수집(RPA_ENGINE=http 경량 HTTP / browser Playwright Async) → pandas 정제 → upsert + 가격 스냅샷 → 로그."""
     at = at or now_kst()
     mode = mode or settings.rpa_source_mode
-    return _run_deals(sink, mode, at, write_log, collect_live_all(mode))
+    return _run_deals(sink, mode, at, write_log, collect_live_all(mode, agencies), agencies)
 
 
-def _run_deals(sink, mode: str, at: datetime, write_log: bool, live: dict | None) -> dict:
+def _run_deals(sink, mode: str, at: datetime, write_log: bool, live: dict | None, agencies: list[str] | None = None) -> dict:
     totals = {}
-    for cls in COLLECTORS:
+    tag = engine_tag()
+    for cls in _collectors(agencies):
         started = now_kst()
         collector = cls()
         try:
@@ -113,7 +125,7 @@ def _run_deals(sink, mode: str, at: datetime, write_log: bool, live: dict | None
                 if write_log:
                     sink.log({"job_name": "BOT-01", "agency_code": collector.agency, "status": "WARN", "source": "live",
                               "collected": 0, "failed": 0, "retries": result.retries,
-                              "message": " / ".join(result.messages[:3] + ["live 실패 - 기존 live 데이터 유지(sample 미적재)"]),
+                              "message": f"{tag} " + " / ".join(result.messages[:3] + ["live 실패 - 기존 live 데이터 유지(sample 미적재)"]),
                               "started_at": started, "ended_at": now_kst()})
                 totals[collector.agency] = {"collected": 0, "failed": 0, "source": "live-kept"}
                 continue
@@ -121,7 +133,7 @@ def _run_deals(sink, mode: str, at: datetime, write_log: bool, live: dict | None
             res = sink.products_bulk(collector.agency, at, result.source, items) if items else {"inserted": 0, "updated": 0}
             fail_rate = failed / (len(items) + failed) * 100 if (items or failed) else 0
             status = "FAIL" if not items else ("WARN" if fail_rate > PARSE_FAIL_THRESHOLD else "SUCCESS")
-            msg = " / ".join(result.messages + [f"신규 {res['inserted']} · 갱신 {res['updated']} · 파싱실패율 {fail_rate:.1f}%"])
+            msg = f"{tag} " + " / ".join(result.messages + [f"신규 {res['inserted']} · 갱신 {res['updated']} · 파싱실패율 {fail_rate:.1f}%"])
             totals[collector.agency] = {"collected": len(items), "failed": failed, "source": result.source, **res}
             if write_log:
                 sink.log({"job_name": "BOT-01", "agency_code": collector.agency, "status": status, "source": result.source,
@@ -131,7 +143,7 @@ def _run_deals(sink, mode: str, at: datetime, write_log: bool, live: dict | None
             log.exception("[%s] 수집 실패", collector.agency)
             if write_log:
                 sink.log({"job_name": "BOT-01", "agency_code": collector.agency, "status": "FAIL", "collected": 0, "failed": 0,
-                          "message": str(e)[:500], "started_at": started, "ended_at": now_kst()})
+                          "message": f"{tag} {str(e)[:480]}", "started_at": started, "ended_at": now_kst()})
     return totals
 
 
@@ -194,7 +206,7 @@ def backfill_sample_history(sink, days: int = 14) -> None:
         run_deals(sink, mode="sample", at=now - timedelta(days=d), write_log=False)
 
 
-def run_job(job: str = "all", mode: str | None = None, sink_kind: str | None = None) -> dict:
+def run_job(job: str = "all", mode: str | None = None, sink_kind: str | None = None, agencies: list[str] | None = None) -> dict:
     if not _lock.acquire(blocking=False):
         log.warning("이전 RPA 작업이 실행 중이어서 건너뜁니다: %s", job)
         return {"skipped": True}
@@ -204,7 +216,7 @@ def run_job(job: str = "all", mode: str | None = None, sink_kind: str | None = N
         if job == "all" and (mode or settings.rpa_source_mode) == "sample" and sink.is_empty():
             backfill_sample_history(sink)  # 시연용 sample 모드에서만 과거 가격 이력 생성 (실데이터와 섞지 않음)
         if job in ("deals", "all"):
-            out["deals"] = run_deals(sink, mode)
+            out["deals"] = run_deals(sink, mode, agencies=agencies)
         if job in ("public", "all"):
             out["public"] = run_public(sink, mode)
         if job in ("report", "all"):
@@ -250,18 +262,19 @@ def _kill_tree(proc: subprocess.Popen) -> None:
     proc.wait(timeout=30)
 
 
-def run_job_isolated(job: str = "all") -> dict:
+def run_job_isolated(job: str = "all", agencies: list[str] | None = None) -> dict:
     """웹 서버 보호용: RPA 를 별도 저우선순위 프로세스로 실행하고, 시간(RPA_JOB_TIMEOUT_SEC)·메모리(RPA_MEMORY_LIMIT_MB)
     한도를 넘으면 Chromium 까지 강제 종료한다. 스케줄러·관리자 수동 실행이 이 함수를 사용한다."""
     if not settings.rpa_isolated:
-        return run_job(job)
+        return run_job(job, agencies=agencies)
     if not _lock.acquire(blocking=False):
         log.warning("이전 RPA 작업이 실행 중이어서 건너뜁니다: %s", job)
         return {"skipped": True}
     started = now_kst()
     try:
         kw = {"start_new_session": True, "preexec_fn": lambda: os.nice(10)} if os.name == "posix" else {}
-        proc = subprocess.Popen([sys.executable, "-m", "rpa.run", job], cwd=str(Path(__file__).resolve().parents[1]), **kw)
+        cmd = [sys.executable, "-m", "rpa.run", job] + (["--agencies", ",".join(agencies)] if agencies else [])
+        proc = subprocess.Popen(cmd, cwd=str(Path(__file__).resolve().parents[1]), **kw)
         deadline = time.monotonic() + settings.rpa_job_timeout_sec
         reason, peak = "", 0.0
         while proc.poll() is None:
@@ -294,8 +307,9 @@ def main() -> None:
     p.add_argument("job", choices=["deals", "public", "report", "all"], nargs="?", default="all")
     p.add_argument("--mode", choices=["live", "sample", "auto"])
     p.add_argument("--sink", choices=["direct", "api"])
+    p.add_argument("--agencies", help="쉼표로 구분한 여행사 코드만 수집 (fallback 서버가 공백 여행사만 대신 수집할 때)")
     a = p.parse_args()
-    print(run_job(a.job, a.mode, a.sink))
+    print(run_job(a.job, a.mode, a.sink, [x for x in (a.agencies or "").split(",") if x] or None))
 
 
 if __name__ == "__main__":

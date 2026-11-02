@@ -19,6 +19,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PLAYWRIGHT_TIMEOUT_MS=30000 \
     # RPA 는 별도 저우선순위 프로세스로 실행: 15분·300MB 를 넘으면 Chromium 까지 강제 종료 → 웹 서버 502 방지
     RPA_ENGINE=http \
+    # 서버 2대 혼용: Render 는 fallback(15·45분, primary 수집 공백만 대신 수집) - EC2 는 docker-compose.yml 에서 primary 로 덮어씀
+    RPA_ROLE=fallback \
+    RPA_RETENTION_HOURS=72 \
     RPA_ISOLATED=true \
     RPA_JOB_TIMEOUT_SEC=900 \
     RPA_AGENCY_TIMEOUT_SEC=240 \

@@ -211,6 +211,22 @@ class Session:
                 break
             last = height
 
+    async def fetch_json(self, url: str, referer: str | None = None):
+        """페이지가 사용하는 데이터 API 를 같은 브라우저 컨텍스트(쿠키·UA·헤더)로 요청 - 요청 간격·재시도 동일."""
+        async def _go():
+            wait = settings.request_interval_sec + random.uniform(0.3, 1.0) - (time.monotonic() - self._last)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            r = await self.ctx.request.get(url, headers={"Referer": referer or url, "Accept": "application/json, text/plain, */*"},
+                                           timeout=settings.playwright_timeout_ms)
+            self._last = time.monotonic()
+            if r.status in (403, 429) or r.status >= 500:
+                raise RuntimeError(f"HTTP {r.status}")
+            return await r.json()
+
+        data, _ = await aretry(_go, url)
+        return data
+
     async def visit(self, url: str, referer: str | None = None, wait_selector: str | None = None) -> PageResult:
         async def _go():
             wait = settings.request_interval_sec + random.uniform(0.3, 1.0) - (time.monotonic() - self._last)

@@ -23,6 +23,10 @@
 ## 구조 메모
 - API prefix `/api/v1`, 프런트엔드는 FastAPI StaticFiles 로 `/` 에 제공 (Netlify 는 `frontend/` 단독)
 - RPA 수집: `rpa/collector/browser.py`(HumanBrowser) + `rpa/selectors.json`(홈 → 특가 페이지 탐색, 셀렉터/JSON 필드)
+  - 엔진 2종: `RPA_ENGINE=http`(기본, `rpa/collector/http_engine.py`) / `browser`(Playwright). 여행사 데이터 → 행 변환은 두 엔진이 같은 함수를 사용해 상품코드·출발일이 같아야 함 (하나투어 `hanatour_plan_rows`, 노랑풍선 `ybtour_goods_rows`)
+  - 누적 방식: 수집에서 빠진 상품은 `RPA_RETENTION_HOURS`(72) 동안 노출, 출발 기간이 지나면 즉시 숨김 (`services/products.active_products_query`)
+  - 서버 역할: `RPA_ROLE=primary`(EC2·Playwright, 0/30분) / `fallback`(Render·HTTP, 15/45분, primary 공백 여행사만) - `backend/app/scheduler.fallback_targets`
+  - 같은 `nomadpick_test` DB 를 쓰는 스크립트와 pytest 를 동시에 실행하지 말 것 (pytest 가 테스트 DB 테이블을 다시 만듦)
 - RPA 적재: `RPA_SINK=direct`(DB 직접) / `api`(X-RPA-KEY 로 `/api/v1/rpa/*` 호출)
 - 수집 데이터 `source` 컬럼: `live` / `sample`, 출발 기간 상품은 `depart_date`~`depart_end`
 - 국토교통부 API: `https://apis.data.go.kr/1613000/DmstcFlightNvgInfo/GetFlightOpratInfoList` (2026-03 개편 경로)

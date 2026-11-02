@@ -9,6 +9,17 @@ services:
     env_file: .env
     environment:
       - PORT=8000
+      # EC2 = primary 수집 서버: Playwright(Chromium) 로 매시 0·30분 수집. Render(fallback·HTTP)는 공백이 있을 때만 대신 수집
+      # (Dockerfile 의 Render 용 저메모리 기본값을 EC2(t3.small 2GB)에 맞게 덮어씀. .env 에 같은 키를 넣으면 그 값 사용)
+      - ENABLE_SCHEDULER=${ENABLE_SCHEDULER:-true}
+      - RPA_ROLE=${RPA_ROLE:-primary}
+      - RPA_ENGINE=${RPA_ENGINE:-browser}
+      - RPA_NODE=${RPA_NODE:-ec2}
+      - RPA_MEMORY_LIMIT_MB=${RPA_MEMORY_LIMIT_MB:-1200}
+      - RPA_AGENCY_TIMEOUT_SEC=${RPA_AGENCY_TIMEOUT_SEC:-480}
+      - RPA_JOB_TIMEOUT_SEC=${RPA_JOB_TIMEOUT_SEC:-1500}
+      - RPA_RETRIES=${RPA_RETRIES:-2}
+      - PLAYWRIGHT_TIMEOUT_MS=${PLAYWRIGHT_TIMEOUT_MS:-45000}
     restart: unless-stopped
     expose:
       - "8000"

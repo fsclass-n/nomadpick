@@ -1,19 +1,38 @@
 """여행사별 파서 (하나투어 · 모두투어 · 노랑풍선) - Playwright 로 렌더링된 실제 페이지 구조 기준."""
 import json
+import logging
 
 from bs4 import BeautifulSoup, Tag
 
 from .base import BaseCollector
 
+log = logging.getLogger(__name__)
+
 
 class HanatourCollector(BaseCollector):
-    """하나투어 기획전(/promotion/plan/...) - div.card-wrap 카드."""
+    """하나투어 기획전(/promotion/plan/...).
+
+    카드(div.card-wrap)의 id(productInfo_-18_24300)는 '노출 순번_기획전번호'라 상품코드가 아니고 순서가 바뀌면 달라진다.
+    → 브라우저로 기획전을 연 뒤, 화면이 사용하는 기획전 데이터(JSON)를 같은 브라우저 세션으로 받아
+      HTTP 엔진과 같은 변환(대표상품코드·출발 기간·이미지)을 사용한다. 실패 시에만 카드 HTML 로 대체.
+    """
     agency = "hanatour"
 
     def postprocess(self, row: dict, item: Tag) -> dict:
         if row.get("code"):
             row["code"] = row["code"].replace("productInfo_", "HT")
         return row
+
+    async def browser_rows(self, session, url: str, page) -> list[dict]:
+        from .http_engine import hanatour_plan_api, hanatour_plan_rows
+
+        try:
+            rows = hanatour_plan_rows(await session.fetch_json(hanatour_plan_api(url), referer=page.url), url)
+            if rows:
+                return self.exclude(rows)
+        except Exception as e:  # noqa: BLE001 - 데이터 API 실패 시 카드 HTML 로 대체
+            log.warning("[hanatour] 기획전 데이터 요청 실패 - 카드 HTML 로 대체: %s", str(e)[:120])
+        return self.parse(page.html, page.url)
 
 
 class ModetourCollector(BaseCollector):

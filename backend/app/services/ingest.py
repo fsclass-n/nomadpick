@@ -9,10 +9,12 @@ from sqlalchemy.orm import Session
 
 from ..models import Agency, Airport, ExcelReport, FlightSchedule, PriceSnapshot, RpaJobLog, TravelProduct
 from ..utils import now_kst, to_kst_naive, today_kst
-from .products import last_depart_date
+from .products import last_depart_date, retention_cutoff
 
 PRODUCT_FIELDS = ("title", "region", "country_code", "city", "theme", "depart_end", "nights", "days", "price",
                   "original_price", "seats_left", "airline", "image_url", "detail_url")
+# 엔진(HTTP·Playwright)마다 제공 여부가 다른 부가 정보 - 이번 수집에 값이 없으면 기존 값을 유지 (빈 값으로 덮어쓰지 않음)
+KEEP_IF_MISSING = {"image_url", "airline", "seats_left"}
 
 
 def get_agency(db: Session, code: str | None) -> Agency | None:
@@ -55,7 +57,10 @@ def upsert_products(db: Session, agency_code: str, collected_at: datetime, sourc
         else:
             updated += 1
         for f in PRODUCT_FIELDS:
-            setattr(product, f, item.get(f))
+            value = item.get(f)
+            if value in (None, "") and f in KEEP_IF_MISSING and getattr(product, f, None) not in (None, ""):
+                continue
+            setattr(product, f, value)
         product.discount_rate = discount_rate(item["price"], item.get("original_price"))
         product.source = source
         product.last_seen_at = collected_at
@@ -66,14 +71,28 @@ def upsert_products(db: Session, agency_code: str, collected_at: datetime, sourc
     for p in touched:
         db.add(PriceSnapshot(product_id=p.id, price=p.price, seats_left=p.seats_left, collected_at=collected_at))
 
+    # 누적 방식: 이번 수집에 없는 상품도 마지막 확인 후 RPA_RETENTION_HOURS(72시간) 동안 유지하고, 그보다 오래되면 숨긴다.
+    # (기획전 교체로 목록에서 빠져도 바로 사라지지 않고, 서버 2대가 서로 다른 엔진으로 수집해도 서로의 상품을 숨기지 않음)
     deactivated = 0
     if touched:
+        cutoff = retention_cutoff(collected_at)
         deactivated = db.execute(
             update(TravelProduct)
             .where(TravelProduct.agency_id == agency.id, TravelProduct.is_active.is_(True),
-                   TravelProduct.last_seen_at < collected_at)
+                   TravelProduct.last_seen_at < cutoff)
             .values(is_active=False)
         ).rowcount
+        if source == "live":  # 실데이터가 들어오면 같은 여행사의 sample 상품은 즉시 숨김(섞지 않음)
+            deactivated += db.execute(
+                update(TravelProduct)
+                .where(TravelProduct.agency_id == agency.id, TravelProduct.is_active.is_(True), TravelProduct.source == "sample")
+                .values(is_active=False)
+            ).rowcount
+            # 이전 방식(최신 수집에 없으면 즉시 숨김)으로 숨겨졌지만 보관 기간 안에 확인된 live 상품은 다시 노출
+            db.execute(update(TravelProduct)
+                       .where(TravelProduct.agency_id == agency.id, TravelProduct.is_active.is_(False),
+                              TravelProduct.source == "live", TravelProduct.last_seen_at >= cutoff)
+                       .values(is_active=True))
     db.execute(update(TravelProduct).where(last_depart_date() < today_kst(), TravelProduct.is_active.is_(True))
                .values(is_active=False))
     fill_missing_images(db)

@@ -65,6 +65,15 @@ class Settings:
         self.rpa_memory_limit_mb = int(os.getenv("RPA_MEMORY_LIMIT_MB", "0"))   # 0 = 제한 없음 (Linux 에서만 감시)
         self.rpa_agency_timeout_sec = int(os.getenv("RPA_AGENCY_TIMEOUT_SEC", "480"))
         self.rpa_retries = int(os.getenv("RPA_RETRIES", "3"))
+        # 누적 방식: 수집에서 빠진 상품도 마지막 확인 후 N시간 동안 노출 (출발 기간이 지나면 즉시 숨김)
+        self.rpa_retention_hours = int(os.getenv("RPA_RETENTION_HOURS", "72"))
+        # 서버 역할: primary(정해진 시각마다 항상 수집) / fallback(최근 수집 성공이 없을 때만 대신 수집)
+        #   EC2(Playwright)=primary · 정각/30분, Render(HTTP)=fallback · 15/45분 → 같은 DB 에 중복 수집하지 않음
+        self.rpa_role = os.getenv("RPA_ROLE", "primary").strip().lower()
+        self.rpa_deals_minutes = os.getenv("RPA_DEALS_MINUTES", "").strip() or ("15,45" if self.rpa_role == "fallback" else "0,30")
+        # fallback 판단 기준(분): primary 의 직전 실행(15분 전)은 포함하고, fallback 자신의 직전 실행(30분 전)은 제외하는 값
+        self.rpa_fallback_stale_min = int(os.getenv("RPA_FALLBACK_STALE_MIN", "25"))
+        self.rpa_node = os.getenv("RPA_NODE", "").strip() or ("render" if os.getenv("RENDER") else "")
         self.enable_scheduler = _bool("ENABLE_SCHEDULER", False)
         # BOT-01(Chromium 특가 수집) 만 끄기 - Render 무료(512MB·해외 IP)에서는 false, 공공데이터·리포트는 계속 실행
         self.enable_deals_job = _bool("ENABLE_DEALS_JOB", True)

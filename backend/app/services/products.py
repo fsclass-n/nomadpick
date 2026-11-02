@@ -1,14 +1,13 @@
 """상품 조회·직렬화 공통 로직."""
-from datetime import timedelta
-
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
+from ..config import settings
 from ..constants import CITY_AIRPORT, HOME_AIRPORT_ID
 from ..models import FlightSchedule, PriceSnapshot, TravelProduct
-from ..utils import today_kst
+from ..utils import now_kst, to_kst_naive, today_kst
 
 
 def serialize(p: TravelProduct) -> dict:
@@ -44,9 +43,16 @@ def last_depart_date():
     return func.coalesce(TravelProduct.depart_end, TravelProduct.depart_date)
 
 
+def retention_cutoff(at: datetime | None = None) -> datetime:
+    """이 시각 이후에 확인된 상품만 노출 (누적 방식, 기본 72시간)."""
+    return (to_kst_naive(at) if at else now_kst()) - timedelta(hours=settings.rpa_retention_hours)
+
+
 def active_products_query():
+    """노출 상품 = 활성 + 출발 기간이 남음 + 최근 N시간 안에 수집에서 확인됨."""
     return (select(TravelProduct).options(joinedload(TravelProduct.agency))
-            .where(TravelProduct.is_active.is_(True), last_depart_date() >= today_kst()))
+            .where(TravelProduct.is_active.is_(True), last_depart_date() >= today_kst(),
+                   TravelProduct.last_seen_at >= retention_cutoff()))
 
 
 def next_departure(p: TravelProduct) -> date:

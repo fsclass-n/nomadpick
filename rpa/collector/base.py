@@ -114,6 +114,10 @@ class BaseCollector:
             result.retries = http.retries
         return result
 
+    async def browser_rows(self, session, url: str, page) -> list[dict]:
+        """브라우저로 연 페이지 → 행. 기본은 렌더링된 HTML 파싱, 여행사별로 재정의(HTTP 엔진과 같은 데이터 사용)."""
+        return self.parse(page.html, page.url)
+
     async def collect_live(self, browser: HumanBrowser) -> CollectResult:
         """여행사 1곳을 전용 컨텍스트로 수집하고, 끝나면 컨텍스트를 닫아 메모리를 반환한다."""
         result = CollectResult(agency=self.agency)
@@ -144,7 +148,7 @@ class BaseCollector:
             try:
                 page = await browser.visit(url, referer=home, wait_selector=self.conf.get("wait_for"))
                 result.retries += page.retries
-                rows = self.parse(page.html, page.url)
+                rows = await self.browser_rows(browser, url, page)
                 result.raw.extend(rows)
                 result.pages.append(page.url)
                 if not rows:

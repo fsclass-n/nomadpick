@@ -276,6 +276,15 @@ NP.thumbClass = (p) => `np-thumb rg-${NP.esc(p.region)}${NP.thumbImg(p) ? " has-
 
 NP.sourceBadge = (p) => (p.source === "sample" ? `<span class="badge text-bg-light border" title="여행사 실사이트가 동적 렌더링·접근 차단되어 내장 샘플 특가 페이지로 수집된 데이터">샘플</span>` : "");
 
+/** 누적 방식: 최근 수집에서 빠진 상품(최대 72시간 유지)은 마지막 확인 시각을 함께 보여 준다 (1시간 이내면 생략). */
+NP.seenAgo = (p) => {
+  if (!p.last_seen_at) return "";
+  const min = Math.floor((Date.now() - new Date(`${p.last_seen_at}+09:00`).getTime()) / 60000);
+  if (!(min >= 60)) return "";
+  const label = min < 1440 ? `${Math.floor(min / 60)}시간 전 확인` : `${Math.floor(min / 1440)}일 전 확인`;
+  return ` · <span class="np-seen" title="여행사 특가 목록에서 마지막으로 확인된 시각 기준 가격입니다.">${label}</span>`;
+};
+
 NP.productCard = (p, { favorite = false } = {}) => `
   <div class="np-card-wrap">
     <div class="card np-card">
@@ -295,7 +304,7 @@ NP.productCard = (p, { favorite = false } = {}) => `
         </div>
         <a href="product.html?id=${p.id}" class="text-reset np-title mb-2">${NP.esc(p.title)}</a>
         <div class="small text-secondary mb-2"><i class="fa-regular fa-calendar me-1" aria-hidden="true"></i>${NP.depart(p)}
-          ${NP.seats(p.seats_left)}</div>
+          ${NP.seats(p.seats_left)}${NP.seenAgo(p)}</div>
         <div class="mt-auto">
           ${p.original_price ? `<div class="np-price-org">${NP.won(p.original_price)}</div>` : ""}
           <div class="np-price">${NP.won(p.price)}<small class="fs-6 fw-normal text-secondary">~</small></div>
