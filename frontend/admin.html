@@ -60,6 +60,42 @@
       </div>
     </div>
   </div>
+
+  <section class="np-panel p-3 mt-4" id="members" aria-labelledby="membersTitle">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+      <div>
+        <h2 class="h3 mb-1" id="membersTitle"><i class="bi bi-people text-primary me-1"></i>회원 권한 관리</h2>
+        <p class="small text-secondary mb-0">일반 회원을 관리자로 지정하거나 관리자 권한을 해제합니다. 변경 즉시 적용됩니다. <span id="adminCount"></span></p>
+      </div>
+      <form class="d-flex gap-2" id="memberSearch" role="search">
+        <select class="form-select w-auto" id="memberRole" aria-label="권한 필터">
+          <option value="">전체</option><option value="ADMIN">관리자</option><option value="USER">일반 회원</option>
+        </select>
+        <input class="form-control" id="memberQ" type="search" maxlength="100" placeholder="이름 · 이메일 검색" aria-label="이름·이메일 검색">
+        <button class="btn btn-primary text-nowrap" type="submit"><i class="bi bi-search"></i><span class="d-none d-sm-inline ms-1">검색</span></button>
+      </form>
+    </div>
+    <div class="alert alert-secondary small py-2 d-none" id="memberReadOnly"><i class="bi bi-eye me-1"></i>체험 관리자는 조회만 가능하며, 회원 이메일은 일부 가려서 표시됩니다.</div>
+    <div class="table-responsive"><table class="table table-np align-middle mb-0">
+      <thead><tr><th class="text-nowrap">이름</th><th>이메일</th><th>가입일</th><th>권한</th><th class="text-end">변경</th></tr></thead>
+      <tbody id="memberRows"><tr><td colspan="5" class="text-center text-secondary py-4">불러오는 중...</td></tr></tbody></table></div>
+    <div class="d-flex justify-content-between align-items-center mt-3 small text-secondary">
+      <span id="memberInfo" role="status"></span>
+      <div class="btn-group btn-group-sm"><button class="btn btn-outline-secondary" id="memberPrev" type="button">이전</button><button class="btn btn-outline-secondary" id="memberNext" type="button">다음</button></div>
+    </div>
+  </section>
+
+  <div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title h5" id="roleModalTitle">권한 변경</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button></div>
+      <div class="modal-body" id="roleModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" id="roleConfirm">변경</button>
+      </div>
+    </div></div>
+  </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>

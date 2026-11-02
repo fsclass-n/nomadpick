@@ -205,6 +205,39 @@ def test_auto_mode_keeps_live_data_when_live_fails(client):
     assert found and found[0]["source"] == "live"
 
 
+def test_admin_role_management(client):
+    admin = login(client, "admin@test.com", "Admin!2026")
+    r = client.post("/api/v1/auth/signup", json={"email": "promote@test.com", "password": "Trip#2026go", "name": "승격대상"})
+    assert r.status_code == 201
+    user_h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.get("/api/v1/admin/users", headers=user_h).status_code == 403  # 일반 회원 접근 불가
+
+    data = client.get("/api/v1/admin/users", params={"q": "promote"}, headers=admin).json()
+    assert data["total"] == 1 and data["items"][0]["role"] == "USER" and data["read_only"] is False
+    uid = data["items"][0]["id"]
+
+    # 승격 → 같은 토큰으로 바로 관리자 API 사용 가능 (권한은 매 요청 DB 기준)
+    assert client.patch(f"/api/v1/admin/users/{uid}/role", json={"role": "ADMIN"}, headers=admin).json()["role"] == "ADMIN"
+    assert client.get("/api/v1/admin/rpa-logs", headers=user_h).status_code == 200
+    assert client.get("/api/v1/admin/users", params={"role": "ADMIN", "q": "promote"}, headers=admin).json()["total"] == 1
+    # 해제 → 즉시 403
+    assert client.patch(f"/api/v1/admin/users/{uid}/role", json={"role": "USER"}, headers=admin).json()["role"] == "USER"
+    assert client.get("/api/v1/admin/rpa-logs", headers=user_h).status_code == 403
+
+    me = client.get("/api/v1/users/me", headers=admin).json()
+    assert client.patch(f"/api/v1/admin/users/{me['id']}/role", json={"role": "USER"}, headers=admin).json()["code"] == "ROLE_LOCKED"
+    demo_id = client.get("/api/v1/admin/users", params={"q": "demo@test.com"}, headers=admin).json()["items"][0]["id"]
+    assert client.patch(f"/api/v1/admin/users/{demo_id}/role", json={"role": "ADMIN"}, headers=admin).json()["code"] == "ROLE_LOCKED"
+    assert client.patch(f"/api/v1/admin/users/{uid}/role", json={"role": "OWNER"}, headers=admin).status_code == 422
+    assert client.patch("/api/v1/admin/users/99999999/role", json={"role": "ADMIN"}, headers=admin).json()["code"] == "USER_NOT_FOUND"
+
+    # 체험 관리자: 이메일 가림 + 변경 불가
+    demo_admin = {"Authorization": f"Bearer {client.post('/api/v1/auth/demo-login', json={'role': 'ADMIN'}).json()['access_token']}"}
+    seen = client.get("/api/v1/admin/users", params={"q": "promote"}, headers=demo_admin).json()
+    assert seen["read_only"] is True and seen["items"][0]["email"] == "pr*****@test.com"
+    assert client.patch(f"/api/v1/admin/users/{uid}/role", json={"role": "ADMIN"}, headers=demo_admin).json()["code"] == "DEMO_READ_ONLY"
+
+
 def test_isolated_rpa_job_is_killed_on_timeout(monkeypatch):
     """RPA 별도 프로세스가 시간 한도를 넘으면 강제 종료되고 FAIL 로그가 남는다 (웹 서버 보호)."""
     from backend.app.config import settings

@@ -150,6 +150,17 @@ NP.renderLayout = (active) => {
   document.querySelectorAll("#np-logout, #np-drawer-logout").forEach((b) => b.addEventListener("click", NP.logout));
   NP.initDrawer();
   NP.initScrollUi();
+  NP.syncRole(user);
+};
+
+/* 관리자가 권한을 바꾸면 다음 화면 이동 때 메뉴(수집 모니터링)에 바로 반영 - 다시 로그인할 필요 없음 */
+NP.syncRole = (user) => {
+  if (!user || !NP.auth.token()) return;
+  NP.api("/users/me").then((me) => {
+    if (me.role === user.role && me.name === user.name) return;
+    NP.auth.save({ access_token: NP.auth.token(), user: me });
+    location.reload();
+  }).catch(() => {});
 };
 
 NP.brand = () => `<img class="np-brand-symbol" src="img/brand-compass.svg" width="40" height="40" alt=""><span class="np-wordmark">Nomad<span>Pick</span><span class="np-brand-dot">.</span></span>`;

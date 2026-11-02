@@ -151,3 +151,7 @@ class RpaReportIn(BaseModel):
 
 class DemoLoginIn(BaseModel):
     role: Literal["USER", "ADMIN"] = "USER"
+
+
+class RoleChangeIn(BaseModel):
+    role: Literal["USER", "ADMIN"]

@@ -65,14 +65,80 @@ document.querySelectorAll("[data-run]").forEach((b) => b.addEventListener("click
   }
 }));
 
+/* 회원 권한 관리 */
+const members = { page: 1, size: 20, total: 0 };
+const ROLE_LABEL = { ADMIN: '<span class="badge text-bg-primary">관리자</span>', USER: '<span class="badge text-bg-light border">일반 회원</span>' };
+const roleModal = new bootstrap.Modal(document.getElementById("roleModal"));
+let pendingRole = null;
+
+async function loadMembers() {
+  const d = await NP.api("/admin/users", { auth: true, params: {
+    q: document.getElementById("memberQ").value.trim(), role: document.getElementById("memberRole").value, page: members.page, size: members.size } });
+  members.total = d.total;
+  document.getElementById("memberReadOnly").classList.toggle("d-none", !d.read_only);
+  document.getElementById("adminCount").textContent = `(현재 관리자 ${d.admin_count}명)`;
+  document.getElementById("memberRows").innerHTML = d.items.map((u) => {
+    const next = u.role === "ADMIN" ? "USER" : "ADMIN";
+    const action = d.read_only || u.locked
+      ? `<span class="small text-secondary" title="${NP.esc(u.locked || "체험 관리자는 조회만 가능합니다.")}"><i class="bi bi-lock"></i> ${u.locked ? "변경 불가" : "조회 전용"}</span>`
+      : `<button class="btn btn-sm ${next === "ADMIN" ? "btn-outline-primary" : "btn-outline-danger"}" data-uid="${u.id}" data-role="${next}"
+           data-name="${NP.esc(u.name)}" data-email="${NP.esc(u.email)}">${next === "ADMIN" ? "관리자 지정" : "관리자 해제"}</button>`;
+    return `<tr><td class="fw-semibold text-nowrap">${NP.esc(u.name)}</td><td class="text-nowrap">${NP.esc(u.email)}</td><td class="text-nowrap">${u.created_at ? u.created_at.slice(0, 10) : "-"}</td>
+      <td>${ROLE_LABEL[u.role] || NP.esc(u.role)}</td><td class="text-end">${action}</td></tr>`;
+  }).join("") || '<tr><td colspan="5" class="text-center text-secondary py-4">검색 결과가 없습니다.</td></tr>';
+  const last = Math.max(1, Math.ceil(d.total / members.size));
+  document.getElementById("memberInfo").textContent = `총 ${d.total.toLocaleString()}명 · ${members.page}/${last} 페이지`;
+  document.getElementById("memberPrev").disabled = members.page <= 1;
+  document.getElementById("memberNext").disabled = members.page >= last;
+}
+
+document.getElementById("memberSearch").addEventListener("submit", (e) => { e.preventDefault(); members.page = 1; loadMembers().catch((er) => NP.toast(er.message, "danger")); });
+document.getElementById("memberRole").addEventListener("change", () => { members.page = 1; loadMembers().catch((er) => NP.toast(er.message, "danger")); });
+document.getElementById("memberPrev").addEventListener("click", () => { members.page -= 1; loadMembers().catch((er) => NP.toast(er.message, "danger")); });
+document.getElementById("memberNext").addEventListener("click", () => { members.page += 1; loadMembers().catch((er) => NP.toast(er.message, "danger")); });
+document.getElementById("memberRows").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-uid]");
+  if (!b) return;
+  pendingRole = { id: b.dataset.uid, role: b.dataset.role };
+  const toAdmin = b.dataset.role === "ADMIN";
+  document.getElementById("roleModalTitle").textContent = toAdmin ? "관리자 지정" : "관리자 해제";
+  document.getElementById("roleModalBody").innerHTML = `<p class="mb-2"><b>${NP.esc(b.dataset.name)}</b> (${NP.esc(b.dataset.email)}) 님을
+    <b>${toAdmin ? "관리자로 지정" : "일반 회원으로 변경"}</b>하시겠습니까?</p>
+    <p class="small text-secondary mb-0">${toAdmin ? "관리자는 수집 모니터링, 리포트, RPA 수동 실행, 회원 권한 변경을 할 수 있습니다." : "관리자 화면과 관리자 API를 즉시 사용할 수 없게 됩니다."}</p>`;
+  const ok = document.getElementById("roleConfirm");
+  ok.className = `btn ${toAdmin ? "btn-primary" : "btn-danger"}`;
+  ok.textContent = toAdmin ? "관리자로 지정" : "권한 해제";
+  roleModal.show();
+});
+document.getElementById("roleConfirm").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;  // await 이후에는 e.currentTarget 이 null
+  if (!pendingRole) return;
+  btn.disabled = true;
+  try {
+    const u = await NP.api(`/admin/users/${pendingRole.id}/role`, { method: "PATCH", auth: true, body: { role: pendingRole.role } });
+    NP.toast(`${u.name} 님의 권한을 ${u.role === "ADMIN" ? "관리자" : "일반 회원"}(으)로 변경했습니다.`, "success");
+    roleModal.hide();
+    await loadMembers();
+  } catch (er) {
+    NP.toast(er.message, "danger");
+  } finally {
+    btn.disabled = false;
+    pendingRole = null;
+  }
+});
+
 (async () => {
   if (!NP.requireLogin()) return;
+  try {  // 권한이 바뀌었을 수 있으므로 서버 기준으로 다시 확인
+    const me = await NP.api("/users/me", { auth: true });
+    NP.auth.save({ access_token: NP.auth.token(), user: me });
+  } catch (_) { /* 오프라인이면 저장된 정보 사용 */ }
   if (!NP.auth.isAdmin()) {
     document.querySelector("main").innerHTML = '<div class="alert alert-warning">관리자만 접근할 수 있습니다.</div>';
     return;
   }
   try {
-    await Promise.all([loadStats(), loadReports()]);
+    await Promise.all([loadStats(), loadReports(), loadMembers()]);
   } catch (e) {
     NP.toast(e.message, "danger");
   }
