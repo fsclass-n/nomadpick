@@ -17,6 +17,7 @@
 }
 
 html, body { height: 100%; }
+html, body { overflow-x: clip; }
 body {
   font-family: var(--np-font-body);
   font-size: 15px;
@@ -287,15 +288,16 @@ a { text-decoration: none; }
 }
 
 /* ===== 헤더: 상용 플랫폼형 (반투명 블러 · 밑줄 인디케이터 · 스크롤 그림자) ===== */
-.np-navbar { min-height: 72px; background: rgba(255, 255, 255, .86); backdrop-filter: saturate(180%) blur(14px);
-  -webkit-backdrop-filter: saturate(180%) blur(14px); box-shadow: 0 1px 0 rgba(15, 23, 42, .06); transition: box-shadow .3s, min-height .3s, background .3s; }
-.np-navbar.np-scrolled { min-height: 62px; background: rgba(255, 255, 255, .95); box-shadow: 0 8px 28px rgba(15, 23, 42, .08); }
-.np-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 700; color: #0f172a !important; }
-.np-logo-mark { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-size: 1.05rem;
-  background: linear-gradient(135deg, #fd7e14 0%, #ff922b 40%, #228be6 100%); box-shadow: 0 6px 16px rgba(253, 126, 20, .3); transition: transform .4s; }
-.np-brand:hover .np-logo-mark { transform: rotate(-20deg) scale(1.06); }
-.np-brand .np-logo-mark .bi { color: #fff; }
-.np-main-nav { gap: 6px; }
+/* 블러는 ::before 에만 적용 - nav 자체에 backdrop-filter 를 주면 fixed 자식(모바일 드로어)의 기준이 nav 가 되어 가로 스크롤 발생 */
+.np-navbar { min-height: 72px; background: transparent; box-shadow: 0 1px 0 rgba(15, 23, 42, .06); transition: box-shadow .3s, min-height .3s; }
+.np-navbar::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgba(255, 255, 255, .86);
+  backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); transition: background .3s; }
+.np-navbar.np-scrolled { min-height: 62px; box-shadow: 0 8px 28px rgba(15, 23, 42, .08); }
+.np-navbar.np-scrolled::before { background: rgba(255, 255, 255, .95); }
+.np-brand { display: inline-flex; align-items: center; gap: 4px; font-size: 1.4rem; font-weight: 700; color: var(--np-primary) !important; }
+.np-brand .bi { color: var(--np-accent); transition: transform .5s cubic-bezier(.34, 1.56, .64, 1); }
+.np-brand:hover .bi { transform: rotate(-25deg); }
+.np-brand:hover .np-main-nav { gap: 6px; }
 .np-main-nav .nav-link { position: relative; padding: 10px 14px !important; border-radius: 10px; color: #475569; font-weight: 600; transition: color .2s, background .2s; }
 .np-main-nav .nav-link::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 2px; height: 3px; border-radius: 3px;
   background: linear-gradient(90deg, var(--np-primary), #3bc9db); transform: scaleX(0); transform-origin: center; transition: transform .3s cubic-bezier(.22, 1, .36, 1); }
@@ -360,4 +362,29 @@ a { text-decoration: none; }
   .np-more { padding: 36px 0 20px; }
   .np-cta { margin-bottom: 64px; text-align: center; justify-content: center; }
   .np-totop { right: 16px; bottom: 18px; width: 50px; height: 50px; }
+}
+
+/* ===== 메인 버튼: 더 보기 · CTA ===== */
+.np-btn-more { display: inline-flex; align-items: center; gap: 10px; padding: 14px 34px; border-radius: 999px; cursor: pointer;
+  font-family: var(--np-font-display); font-weight: 500; font-size: 1rem; color: var(--np-primary);
+  background: #fff; border: 1.5px solid #cfe0ff; box-shadow: 0 8px 22px rgba(13, 110, 253, .1);
+  transition: transform .25s, box-shadow .25s, background .25s, color .25s, border-color .25s; }
+.np-btn-more i { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: .85rem;
+  color: #fff; background: var(--np-primary); transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
+.np-btn-more:hover { color: #fff; background: var(--np-primary); border-color: var(--np-primary); transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(13, 110, 253, .28); }
+.np-btn-more:hover i { color: var(--np-primary); background: #fff; transform: translateY(2px); }
+.np-btn-more:disabled { opacity: .6; pointer-events: none; }
+.np-cta-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.np-cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; border-radius: 999px; text-decoration: none;
+  font-family: var(--np-font-display); font-weight: 500; font-size: 1rem; transition: transform .25s, box-shadow .25s, background .25s, color .25s; }
+.np-cta-primary { color: #1864ab; background: #fff; box-shadow: 0 10px 24px rgba(4, 30, 70, .22); }
+.np-cta-primary:hover { color: #0b4f8a; transform: translateY(-2px); box-shadow: 0 16px 32px rgba(4, 30, 70, .3); }
+.np-cta-arrow { transition: transform .3s; }
+.np-cta-primary:hover .np-cta-arrow { transform: translateX(4px); }
+.np-cta-ghost { color: #fff; background: rgba(255, 255, 255, .14); border: 1.5px solid rgba(255, 255, 255, .55); backdrop-filter: blur(4px); }
+.np-cta-ghost:hover { color: #1864ab; background: #fff; border-color: #fff; transform: translateY(-2px); }
+@media (max-width: 575.98px) {
+  .np-cta-actions { width: 100%; }
+  .np-cta-btn { flex: 1; justify-content: center; padding: 13px 16px; }
 }

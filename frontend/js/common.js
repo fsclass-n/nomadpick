@@ -86,7 +86,7 @@ NP.renderLayout = (active) => {
       <a href="#" onclick="location.reload();return false;" class="ms-2">다시 시도</a></div></div>
     <nav class="navbar navbar-expand-lg np-navbar sticky-top">
       <div class="container">
-        <a class="navbar-brand np-brand" href="index.html"><span class="np-logo-mark"><i class="bi bi-compass-fill"></i></span>NomadPick</a>
+        <a class="navbar-brand np-brand" href="index.html"><i class="bi bi-compass-fill"></i>NomadPick</a>
         <button class="np-burger d-lg-none" id="npBurger" type="button" aria-label="메뉴 열기" aria-controls="npDrawer" aria-expanded="false">
           <span></span><span></span><span></span></button>
         <div class="collapse navbar-collapse" id="npNav">
