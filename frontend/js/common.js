@@ -101,10 +101,38 @@ NP.renderLayout = (active) => {
     </nav>`);
 
   document.body.insertAdjacentHTML("beforeend", `
-    <footer class="np-footer mt-5 py-4"><div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
-      <div><b class="text-primary">NomadPick</b> · RPA 기반 개인 맞춤형 여행상품 추천 · 3조(김길동·박미금·이오리·홍기흥)</div>
-      <div>상품 정보는 각 여행사 공개 특가 페이지 기준이며, 예약은 원 여행사에서 진행됩니다. 국내선 운항정보: 국토교통부(TAGO)</div>
-    </div></footer>`);
+    <footer class="np-footer mt-5">
+      <div class="container">
+        <div class="np-footer-top">
+          <div class="np-footer-brand">
+            <a class="np-footer-logo" href="index.html"><i class="bi bi-compass-fill me-1"></i>NomadPick</a>
+            <p>RPA 기반 개인 맞춤형 여행상품 추천 서비스.<br>여러 여행사의 특가를 30분마다 모아 내 취향에 맞게 골라 드립니다.</p>
+            <div class="np-footer-social">
+              <a href="https://github.com/fsclass-n/nomadpick" target="_blank" rel="noopener" aria-label="GitHub"><i class="bi bi-github"></i></a>
+              <a href="https://fsclass-n.github.io/nomadpick/" target="_blank" rel="noopener" aria-label="프로젝트 소개"><i class="bi bi-play-circle"></i></a>
+              <a href="https://nomadpick.onrender.com/docs" target="_blank" rel="noopener" aria-label="API 문서"><i class="bi bi-code-slash"></i></a>
+            </div>
+          </div>
+          <div class="np-footer-col"><h6>서비스</h6>
+            <a href="index.html">오늘의 특가</a><a href="recommend.html">맞춤 추천</a><a href="preferences.html">선호 설정</a><a href="mypage.html">마이페이지</a></div>
+          <div class="np-footer-col"><h6>제휴 여행사</h6>
+            <a href="https://www.hanatour.com/" target="_blank" rel="noopener">하나투어</a><a href="https://www.modetour.com/" target="_blank" rel="noopener">모두투어</a>
+            <a href="https://www.ybtour.co.kr/" target="_blank" rel="noopener">노랑풍선</a></div>
+          <div class="np-footer-col"><h6>프로젝트</h6>
+            <a href="https://fsclass-n.github.io/nomadpick/" target="_blank" rel="noopener">소개 · 시연 영상</a>
+            <a href="https://github.com/fsclass-n/nomadpick" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://nomadpick.onrender.com/docs" target="_blank" rel="noopener">API 문서</a></div>
+          <div class="np-footer-col np-footer-info"><h6>데이터 안내</h6>
+            <p><i class="bi bi-robot"></i> 특가 30분 주기 자동 수집</p>
+            <p><i class="bi bi-airplane"></i> 국내선 운항정보: 국토교통부(TAGO)</p>
+            <p><i class="bi bi-shield-check"></i> 예약·결제는 각 여행사에서 진행</p></div>
+        </div>
+        <div class="np-footer-bottom">
+          <span>© 2026 NomadPick · Semi-Project 3조 (김길동 · 박미금 · 이오리 · 홍기흥)</span>
+          <span>상품 정보는 각 여행사 공개 특가 페이지 기준이며, 실제 가격·좌석은 여행사 사이트에서 확인해 주세요.</span>
+        </div>
+      </div>
+    </footer>`);
 
   document.querySelectorAll("#np-logout, #np-drawer-logout").forEach((b) => b.addEventListener("click", NP.logout));
   NP.initDrawer();

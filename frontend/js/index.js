@@ -83,3 +83,18 @@ document.getElementById("resetBtn").addEventListener("click", () => {
 document.getElementById("moreBtn").addEventListener("click", () => { state.page += 1; load(true); });
 
 loadMeta().then(() => load()).catch((e) => NP.toast(e.message, "danger"));
+
+/* 상단 검색 · 인기 여행지 → 필터 검색어로 반영 후 목록으로 이동 */
+const heroForm = document.getElementById("heroSearch");
+if (heroForm) {
+  heroForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    form.q.value = document.getElementById("heroQ").value.trim();
+    reload();
+    document.getElementById("deals").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.querySelectorAll(".np-hero-tags [data-q]").forEach((b) => b.addEventListener("click", () => {
+    document.getElementById("heroQ").value = b.dataset.q;
+    heroForm.requestSubmit();
+  }));
+}

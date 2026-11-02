@@ -12,26 +12,32 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<main>
-  <section class="np-hero pb-4 pt-4 mb-4">
-    <div class="container">
-      <div class="row align-items-center g-3">
-        <div class="col-lg-7">
-          <h1 class="mb-2">여러 여행사 특가, 한 번에 비교하세요</h1>
-          <p class="lead mb-0">RPA가 하나투어 · 모두투어 · 노랑풍선의 특가를 30분마다 수집하고,<br class="d-none d-md-inline"> 내 여행 취향에 맞는 상품만 골라 추천합니다.</p>
-        </div>
-        <div class="col-lg-5">
-          <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
-            <div class="np-stat"><small>수집 상품</small><strong id="statTotal">-</strong></div>
-            <div class="np-stat"><small>여행사</small><strong id="statAgencies">3곳</strong></div>
-            <div class="np-stat"><small>최근 수집</small><strong id="statUpdated">-</strong></div>
-          </div>
-        </div>
+<main class="np-home">
+  <section class="np-home-hero">
+    <div class="container position-relative">
+      <span class="np-hero-kicker"><span class="np-live-dot"></span>실시간 특가 · RPA가 30분마다 업데이트</span>
+      <h1>여러 여행사 특가,<br><em>한 번에 비교하세요</em></h1>
+      <p class="np-hero-lead">RPA가 하나투어 · 모두투어 · 노랑풍선의 특가를 30분마다 수집하고,<br class="d-none d-md-inline"> 내 여행 취향에 맞는 상품만 골라 추천합니다.</p>
+      <form class="np-hero-search" id="heroSearch" role="search">
+        <i class="bi bi-geo-alt-fill"></i>
+        <input id="heroQ" type="search" placeholder="어디로 떠나세요? 도시 · 상품명 검색" maxlength="50" aria-label="도시·상품명 검색">
+        <button class="btn btn-warning" type="submit"><i class="bi bi-search me-1"></i>특가 찾기</button>
+      </form>
+      <div class="np-hero-tags"><span>인기 여행지</span>
+        <button type="button" data-q="다낭">다낭</button><button type="button" data-q="오사카">오사카</button>
+        <button type="button" data-q="방콕">방콕</button><button type="button" data-q="세부">세부</button>
+        <button type="button" data-q="괌">괌</button><button type="button" data-q="제주">제주</button>
+      </div>
+      <div class="np-hero-stats">
+        <div class="np-stat"><i class="bi bi-airplane"></i><div><small>수집 상품</small><strong id="statTotal">-</strong></div></div>
+        <div class="np-stat"><i class="bi bi-buildings"></i><div><small>여행사</small><strong id="statAgencies">3곳</strong></div></div>
+        <div class="np-stat"><i class="bi bi-clock-history"></i><div><small>최근 수집</small><strong id="statUpdated">-</strong></div></div>
       </div>
     </div>
+    <a class="np-photo-credit" href="https://unsplash.com/photos/airplane-wing-over-clouds-during-sunset-2eUvys77PDc" target="_blank" rel="noopener">Photo by Fujiphilm on Unsplash</a>
   </section>
 
-  <div class="container">
+  <div class="container np-home-body">
     <!-- 필터 바: PC 는 상단 고정, 모바일은 오프캔버스 (BUG-03 조치) -->
     <div class="d-flex d-lg-none justify-content-between align-items-center mb-3">
       <button class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#filterPanel"><i class="bi bi-funnel me-1"></i>필터</button>
@@ -86,16 +92,33 @@
       </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <div class="text-secondary small" id="resultInfo">불러오는 중...</div>
-      <a href="recommend.html" class="btn btn-sm btn-outline-primary"><i class="bi bi-stars me-1"></i>내 취향 추천 보기</a>
+    <div class="np-section-head" id="deals">
+      <div>
+        <span class="np-eyebrow">TODAY'S DEALS</span>
+        <h2>오늘의 특가</h2>
+        <div class="text-secondary small" id="resultInfo">불러오는 중...</div>
+      </div>
+      <a href="recommend.html" class="btn btn-outline-primary rounded-pill px-3"><i class="bi bi-stars me-1"></i>내 취향 추천 보기</a>
     </div>
 
     <div class="np-cards" id="cards">
       <div class="np-card-wrap"><div class="skeleton"></div></div><div class="np-card-wrap"><div class="skeleton"></div></div>
       <div class="np-card-wrap"><div class="skeleton"></div></div><div class="np-card-wrap"><div class="skeleton"></div></div>
     </div>
-    <div class="text-center my-4"><button class="btn btn-outline-secondary px-5 d-none" id="moreBtn">더 보기</button></div>
+    <div class="text-center my-4"><button class="btn btn-outline-secondary rounded-pill px-5 d-none" id="moreBtn">더 보기 <i class="bi bi-chevron-down ms-1"></i></button></div>
+
+    <section class="np-why">
+      <div class="np-why-item"><span><i class="bi bi-robot"></i></span><div><b>30분마다 자동 수집</b><p>3개 여행사 특가를 RPA가 대신 확인해요</p></div></div>
+      <div class="np-why-item"><span><i class="bi bi-stars"></i></span><div><b>취향 맞춤 추천</b><p>지역 · 예산 · 출발월로 Top 10 + 추천 이유</p></div></div>
+      <div class="np-why-item"><span><i class="bi bi-graph-down-arrow"></i></span><div><b>가격 변동 추적</b><p>가격 추이와 관심 상품 가격 하락 알림</p></div></div>
+    </section>
+
+    <section class="np-cta">
+      <div><span class="np-eyebrow text-white-50">PERSONALIZED</span><h3>내 여행 취향을 알려주세요</h3>
+        <p>1분이면 충분해요. 취향에 꼭 맞는 특가만 골라 이유와 함께 추천해 드립니다.</p></div>
+      <div class="d-flex gap-2 flex-wrap"><a class="btn btn-light btn-lg rounded-pill px-4" href="preferences.html">취향 설정하기</a>
+        <a class="btn btn-outline-light btn-lg rounded-pill px-4" href="recommend.html">추천 보기</a></div>
+    </section>
   </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

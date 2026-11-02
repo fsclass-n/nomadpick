@@ -76,8 +76,29 @@ def upsert_products(db: Session, agency_code: str, collected_at: datetime, sourc
         ).rowcount
     db.execute(update(TravelProduct).where(last_depart_date() < today_kst(), TravelProduct.is_active.is_(True))
                .values(is_active=False))
+    fill_missing_images(db)
     db.commit()
     return {"inserted": inserted, "updated": updated, "snapshots": len(touched), "deactivated": deactivated}
+
+
+def fill_missing_images(db: Session) -> int:
+    """대표 이미지가 없는 상품(예: 하나투어 기획전 JSON 은 이미지 미제공)에 같은 도시 → 국가 → 지역 상품의 이미지를 채운다."""
+    rows = db.execute(select(TravelProduct.city, TravelProduct.country_code, TravelProduct.region, TravelProduct.image_url)
+                      .where(TravelProduct.is_active.is_(True), TravelProduct.image_url.is_not(None), TravelProduct.image_url != "")
+                      .order_by(TravelProduct.last_seen_at.desc())).all()
+    by_city, by_country, by_region = {}, {}, {}
+    for city, country, region, url in rows:
+        by_city.setdefault(city, url)
+        by_country.setdefault(country, url)
+        by_region.setdefault(region, url)
+    filled = 0
+    for p in db.scalars(select(TravelProduct).where(TravelProduct.is_active.is_(True),
+                                                    (TravelProduct.image_url.is_(None)) | (TravelProduct.image_url == ""))):
+        url = by_city.get(p.city) or by_country.get(p.country_code) or by_region.get(p.region)
+        if url:
+            p.image_url = url
+            filled += 1
+    return filled
 
 
 def upsert_flights(db: Session, items: list[dict], source: str = "live") -> dict:
