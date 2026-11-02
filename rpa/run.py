@@ -61,10 +61,28 @@ async def _collect_live_async() -> dict | None:
     return results
 
 
+def _collect_http_all() -> dict:
+    """경량 HTTP 엔진: 브라우저 없이 3곳을 차례로 수집 (Render 무료 512MB 에서도 수십 MB)."""
+    from .collector.base import CollectResult
+
+    results = {}
+    for cls in COLLECTORS:
+        collector = cls()
+        try:
+            results[collector.agency] = collector.collect_http()
+        except Exception as e:  # 한 여행사 실패가 다른 여행사 수집을 막지 않도록
+            log.exception("[%s] live(http) 수집 실패", collector.agency)
+            results[collector.agency] = CollectResult(agency=collector.agency, messages=[f"live 수집 실패: {str(e)[:200]}"])
+        log.info("[%s] live(http) %d건 %s", collector.agency, len(results[collector.agency].raw), " / ".join(results[collector.agency].messages))
+    return results
+
+
 def collect_live_all(mode: str) -> dict | None:
     """동기 코드(스케줄러 스레드·BackgroundTasks)에서 호출. 이미 이벤트 루프가 도는 스레드라면 별도 스레드에서 실행."""
     if mode not in ("live", "auto"):
         return None
+    if settings.rpa_engine != "browser":
+        return _collect_http_all()
     try:
         asyncio.get_running_loop()
     except RuntimeError:

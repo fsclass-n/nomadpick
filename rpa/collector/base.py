@@ -91,6 +91,29 @@ class BaseCollector:
         return urls
 
     # ---------- 수집 ----------
+    def collect_http(self) -> CollectResult:
+        """경량 HTTP 엔진(브라우저 없음): 홈 → 기획전 탐색 → 여행사 공개 데이터(JSON) 수집."""
+        import requests
+
+        from .http_engine import FETCHERS, HttpSession
+
+        result = CollectResult(agency=self.agency)
+        home = self.conf["home"]
+        with HttpSession() as http:
+            try:
+                home_html = http.get(home).text
+            except BrowserError as e:
+                result.messages.append(f"홈 접속 실패: {e}")
+                home_html = ""  # 기획전 탐색은 fallback 주소 사용
+            try:
+                result.raw = FETCHERS[self.agency](self, http, home_html, home)
+                if not result.raw:
+                    result.messages.append("live 0건(구조 변경 추정)")
+            except (BrowserError, requests.RequestException, ValueError, KeyError) as e:
+                result.messages.append(f"수집 실패: {str(e)[:200]}")
+            result.retries = http.retries
+        return result
+
     async def collect_live(self, browser: HumanBrowser) -> CollectResult:
         """여행사 1곳을 전용 컨텍스트로 수집하고, 끝나면 컨텍스트를 닫아 메모리를 반환한다."""
         result = CollectResult(agency=self.agency)

@@ -48,6 +48,8 @@ class Settings:
         self.data_go_kr_key = os.getenv("DATA_GO_KR_KEY", "").strip()
         self.rpa_source_mode = os.getenv("RPA_SOURCE_MODE", "auto")
         self.rpa_sink = os.getenv("RPA_SINK", "direct")
+        # 수집 엔진: http(기본, 브라우저 없이 여행사 공개 JSON 수집 - Render 무료에서도 동작) / browser(Playwright Chromium)
+        self.rpa_engine = os.getenv("RPA_ENGINE", "http").strip().lower()
         self.api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
         self.request_interval_sec = float(os.getenv("REQUEST_INTERVAL_SEC", "2"))
         self.rpa_user_agent = os.getenv("RPA_USER_AGENT", "").strip() or DEFAULT_BROWSER_UA

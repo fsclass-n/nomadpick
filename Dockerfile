@@ -1,6 +1,7 @@
 # NomadPick - FastAPI(API + 정적 프런트엔드) + RPA 스케줄러(Playwright) 단일 컨테이너
 # Render(Docker 런타임, 무료 RAM 512MB) / AWS EC2(docker compose) 공용
 # Microsoft 공식 Playwright 이미지: Chromium·시스템 의존성 사전 설치 (requirements.txt 의 playwright==1.49.1 과 버전 일치)
+# 기본 수집 엔진은 RPA_ENGINE=http (브라우저 없이 여행사 공개 JSON 수집, 수십 MB) - Chromium 은 RPA_ENGINE=browser 일 때만 사용
 FROM mcr.microsoft.com/playwright/python:v1.49.1-noble
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -17,6 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PLAYWRIGHT_BLOCK_TYPES=image,media,font,stylesheet,texttrack,manifest \
     PLAYWRIGHT_TIMEOUT_MS=30000 \
     # RPA 는 별도 저우선순위 프로세스로 실행: 15분·300MB 를 넘으면 Chromium 까지 강제 종료 → 웹 서버 502 방지
+    RPA_ENGINE=http \
     RPA_ISOLATED=true \
     RPA_JOB_TIMEOUT_SEC=900 \
     RPA_AGENCY_TIMEOUT_SEC=240 \
